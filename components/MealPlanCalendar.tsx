@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Button, Modal, TextInput, Alert } from "react-native";
-import { format, startOfWeek, addDays, isSameDay } from "date-fns";
+import { format, startOfWeek, addDays, subWeeks, isSameDay } from "date-fns";
 
 const MealPlanCalendar = () => {
   const today = new Date();
-  const start = startOfWeek(today, { weekStartsOn: 0 });
   const [weeksToShow, setWeeksToShow] = useState(1);
+  const [startDate, setStartDate] = useState(startOfWeek(today, { weekStartsOn: 0 }));
   const scrollViewRef = useRef<ScrollView>(null);
+  const hasCenteredOnToday = useRef(false);
 
-  const days = Array.from({ length: 7 * weeksToShow }, (_, i) => addDays(start, i));
+  // Generate an array of days based on the number of weeks to show
+  const days = Array.from({ length: 7 * weeksToShow }, (_, i) => addDays(startDate, i));
 
   type Meal = {
     name: string;
@@ -26,40 +28,46 @@ const MealPlanCalendar = () => {
     Snack: 'purple',
   };
 
+  // Function to generate default meals for a day
   const generateMeals = (): Meal[] => [
     { name: 'Breakfast', color: mealColors.Breakfast },
     { name: 'Lunch', color: mealColors.Lunch },
     { name: 'Dinner', color: mealColors.Dinner },
   ];
 
-  const initializeMeals = (days: Date[]): Meals => {
+  // Function to initialize meals for the given days
+  const initializeMeals = (days: Date[], existingMeals: Meals): Meals => {
     return days.reduce((acc, day) => {
-      acc[format(day, "yyyy-MM-dd")] = generateMeals();
+      const dayString = format(day, "yyyy-MM-dd");
+      acc[dayString] = existingMeals[dayString] || generateMeals();
       return acc;
-    }, {} as Meals);
+    }, { ...existingMeals });
   };
 
-  const [meals, setMeals] = useState<Meals>(initializeMeals(days));
+  const [meals, setMeals] = useState<Meals>(initializeMeals(days, {} as Meals));
   const [modalVisible, setModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [newMealName, setNewMealName] = useState('');
   const [selectedDay, setSelectedDay] = useState('');
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
 
+  // Update meals when weeksToShow or startDate changes
   useEffect(() => {
-    setMeals((prevMeals) => ({
-      ...prevMeals,
-      ...initializeMeals(days),
-    }));
-  }, [weeksToShow]);
+    setMeals((prevMeals) => initializeMeals(days, prevMeals));
+  }, [weeksToShow, startDate]);
 
+  // Scroll to the current date when the component mounts
   useEffect(() => {
-    const todayIndex = days.findIndex(day => isSameDay(day, today));
-    if (todayIndex !== -1 && scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ x: todayIndex * 116, animated: true });
+    if (!hasCenteredOnToday.current) {
+      const todayIndex = days.findIndex(day => isSameDay(day, today));
+      if (todayIndex !== -1 && scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ x: todayIndex * 116, animated: true });
+        hasCenteredOnToday.current = true;
+      }
     }
-  }, [days]);
+  }, [days]); // Dependency array includes days to ensure it runs when days change
 
+  // Function to add a new meal
   const addMeal = () => {
     if (meals[selectedDay].some(meal => meal.name === newMealName)) {
       Alert.alert("Error", "Meal name already exists for this day.");
@@ -74,11 +82,13 @@ const MealPlanCalendar = () => {
     setNewMealName('');
   };
 
+  // Function to open the modal for adding a meal
   const openModal = (day: string) => {
     setSelectedDay(day);
     setModalVisible(true);
   };
 
+  // Function to open the modal for editing a meal
   const openEditModal = (day: string, meal: Meal) => {
     setSelectedDay(day);
     setSelectedMeal(meal);
@@ -86,6 +96,7 @@ const MealPlanCalendar = () => {
     setEditModalVisible(true);
   };
 
+  // Function to delete a meal
   const deleteMeal = () => {
     if (selectedMeal) {
       setMeals((prevMeals) => ({
@@ -97,6 +108,7 @@ const MealPlanCalendar = () => {
     }
   };
 
+  // Function to rename a meal
   const renameMeal = () => {
     if (selectedMeal) {
       if (meals[selectedDay].some(meal => meal.name === newMealName)) {
@@ -115,33 +127,48 @@ const MealPlanCalendar = () => {
     }
   };
 
+  // Function to show more days (add another week)
   const showMoreDays = () => {
     setWeeksToShow(weeksToShow + 1);
   };
 
+  // Function to reset to the current week
+  const resetToToday = () => {
+    setStartDate(startOfWeek(today, { weekStartsOn: 0 }));
+    setWeeksToShow(1);
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ x: 0, animated: true });
+    }
+  };
+
   return (
-    <ScrollView horizontal={true} style={styles.scrollView} ref={scrollViewRef}>
-      <View style={styles.grid}>
-        {days.map((day, index) => {
-          const dayString = format(day, "yyyy-MM-dd");
-          const isToday = isSameDay(day, today);
-          return (
-            <View key={day.toISOString()} style={[styles.dayContainer, isToday && styles.todayContainer]}>
-              <Text style={styles.dayName}>{format(day, "EEEE")}</Text>
-              <Text style={styles.date}>{format(day, "MM/dd")}</Text>
-              <View style={styles.mealsContainer}>
-                {meals[dayString]?.map((meal) => (
-                  <TouchableOpacity key={meal.name} style={[styles.meal, { backgroundColor: meal.color }]} onPress={() => openEditModal(dayString, meal)}>
-                    <Text style={styles.mealText}>{meal.name}</Text>
-                  </TouchableOpacity>
-                ))}
+    <View>
+      <Button title="Reset to Today" onPress={resetToToday} />
+      <ScrollView horizontal={true} style={styles.scrollView} ref={scrollViewRef}>
+        <View style={styles.grid}>
+          {days.map((day, index) => {
+            const dayString = format(day, "yyyy-MM-dd");
+            const isToday = isSameDay(day, today);
+            const dayMeals = meals[dayString] || [];
+            const dayHeight = 100 + dayMeals.length * 50; // Base height + additional height per meal
+            return (
+              <View key={day.toISOString()} style={[styles.dayContainer, isToday && styles.todayContainer, { height: dayHeight }]}>
+                <Text style={styles.dayName}>{format(day, "EEEE")}</Text>
+                <Text style={styles.date}>{format(day, "MM/dd")}</Text>
+                <View style={styles.mealsContainer}>
+                  {dayMeals.map((meal) => (
+                    <TouchableOpacity key={meal.name} style={[styles.meal, { backgroundColor: meal.color }]} onPress={() => openEditModal(dayString, meal)}>
+                      <Text style={styles.mealText}>{meal.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <Button title="Add Meal" onPress={() => openModal(dayString)} />
               </View>
-              <Button title="Add Meal" onPress={() => openModal(dayString)} />
-            </View>
-          );
-        })}
-      </View>
-      <Button title="Show More Days" onPress={showMoreDays} />
+            );
+          })}
+          <Button title="Show More Days" onPress={showMoreDays} />
+        </View>
+      </ScrollView>
       <Modal
         animationType="slide"
         transparent={true}
@@ -179,11 +206,15 @@ const MealPlanCalendar = () => {
           <Button title="Cancel" onPress={() => setEditModalVisible(false)} />
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   scrollView: {
     flex: 1,
   },
@@ -193,7 +224,6 @@ const styles = StyleSheet.create({
   },
   dayContainer: {
     width: 100,
-    height: 300,
     padding: 8,
     borderWidth: 1,
     borderColor: '#ddd',
