@@ -11,7 +11,7 @@ export default function Index() {
         alignItems: "center",
       }}
     >
-      <Text>My calendard</Text>
+      <Text>My calendar</Text>
       <MealPlanCalendar />
     </View>
   );
