@@ -1,4 +1,3 @@
-// filepath: /c:/School/Spring 2025/Capstone/MealPlanApp/app/index.tsx
 import { Text, View } from "react-native";
 import MealPlanCalendar from '@/components/MealPlanCalendar';
 
@@ -7,8 +6,9 @@ export default function Index() {
     <View
       style={{
         flex: 1,
-        justifyContent: "center",
+        justifyContent: "flex-start", // Align content to the top
         alignItems: "center",
+        paddingTop: 50, // Add padding to lower the content
       }}
     >
       <Text>My calendar</Text>
