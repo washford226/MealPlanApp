@@ -1,18 +1,13 @@
-import { Text, View } from "react-native";
+
 import MealPlanCalendar from '@/components/MealPlanCalendar';
+import LoginScreen from '@/components/LoginScreen';
 
 export default function Index() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
+
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "flex-start", // Align content to the top
-        alignItems: "center",
-        paddingTop: 50, // Add padding to lower the content
-      }}
-    >
-      <Text>My calendar</Text>
-      <MealPlanCalendar />
-    </View>
-  );
-}
+
