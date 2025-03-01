@@ -11,14 +11,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect to MySQL
+// Connects to MySQL
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD, //there is no password set however if we wanted one this processes it
+  password: process.env.DB_PASSWORD, //There is no password set however if we wanted one this processes it, this will work.
   database: process.env.DB_NAME,
 });
 
+//Ensure that database is connected.
 db.connect((err) => {
   if (err) {
     console.error("Database connection failed: ", err);
@@ -27,7 +28,7 @@ db.connect((err) => {
   console.log("Connected to MySQL database.");
 });
 
-// Start server
+// Starts the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
