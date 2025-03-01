@@ -8,7 +8,14 @@
    npm install express @types/express
    ```
 
-2. Start the app
+2. Start the server
+   ```bash
+   cd backend
+   npm run server
+   cd..
+   ```
+
+3. Start the app
 
    ```bash
     npx expo start
