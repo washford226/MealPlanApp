@@ -12,7 +12,6 @@
    ```bash
    cd backend
    npm run server
-   cd..
    ```
 
 3. Start the app
