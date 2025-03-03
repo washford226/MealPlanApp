@@ -1,21 +1,20 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
 
-const LoginScreen = ({ onLogin, onNavigateToSignUp }: { onLogin: () => void, onNavigateToSignUp: () => void }) => {
+const SignUpScreen = ({ onSignUp }: { onSignUp: () => void }) => {
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    if (username === "user" && password === "password") {
-      onLogin();
-    } else {
-      Alert.alert("Invalid credentials", "Please enter the correct username and password.");
-    }
+  const handleSignUp = () => {
+    // Add your signup logic here
+    Alert.alert("Success", "User registered successfully");
+    onSignUp();
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Sign Up</Text>
       <TextInput
         style={styles.input}
         placeholder="Username"
@@ -24,13 +23,18 @@ const LoginScreen = ({ onLogin, onNavigateToSignUp }: { onLogin: () => void, onN
       />
       <TextInput
         style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={styles.input}
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
-      <Button title="Login" onPress={handleLogin} />
-      <Button title="Create Account" onPress={onNavigateToSignUp} />
+      <Button title="Sign Up" onPress={handleSignUp} />
     </View>
   );
 };
@@ -56,4 +60,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen;
+export default SignUpScreen;
