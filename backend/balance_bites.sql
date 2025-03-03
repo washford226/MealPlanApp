@@ -6,7 +6,7 @@ USE balance_bites;
 
 -- Create the users table
 CREATE TABLE users (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id CHAR(36) PRIMARY KEY UNIQUE,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
@@ -15,8 +15,8 @@ CREATE TABLE users (
 
 -- Create the meals table
 CREATE TABLE meals (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
+    id CHAR(36) PRIMARY KEY UNIQUE,
+    user_id CHAR(36) NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     ingredients TEXT NOT NULL,

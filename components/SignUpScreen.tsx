@@ -6,10 +6,30 @@ const SignUpScreen = ({ onSignUp }: { onSignUp: () => void }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSignUp = () => {
-    // Add your signup logic here
-    Alert.alert("Success", "User registered successfully");
-    onSignUp();
+  const handleSignUp = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/users/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+        }),
+      });
+
+      if (response.status === 201) {
+        Alert.alert("Success", "User registered successfully");
+        onSignUp();
+      } else {
+        const data = await response.json();
+        Alert.alert("Error", data.message || "Registration failed");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Registration failed. Please check your network connection and try again.");
+    }
   };
 
   return (
