@@ -20,6 +20,10 @@ export default function Index() {
     setIsSigningUp(false);
   };
 
+  const handleNavigateToLogin = () => {
+    setIsSigningUp(false);
+  };
+
   return (
     <View style={styles.container}>
       {isLoggedIn ? (
@@ -28,7 +32,7 @@ export default function Index() {
           <MealPlanCalendar />
         </>
       ) : isSigningUp ? (
-        <SignUpScreen onSignUp={handleSignUp} />
+        <SignUpScreen onSignUp={handleSignUp} onNavigateToLogin={handleNavigateToLogin} />
       ) : (
         <LoginScreen onLogin={handleLogin} onNavigateToSignUp={handleNavigateToSignUp} />
       )}
