@@ -1,52 +1,61 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import axios from 'axios';
+import { Platform } from 'react-native';
 
-const SignUpScreen = ({ onSignUp }: { onSignUp: () => void }) => {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+interface SignUpScreenProps {
+  onSignUp: () => void;
+}
+
+const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp }) => {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const getBaseUrl = () => {
+    if (Platform.OS === 'android') {
+      return 'http://10.0.2.2:5000';
+    } else {
+      return 'http://localhost:5000';
+    }
+  };
 
   const handleSignUp = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/users/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          email,
-          password,
-        }),
+      const response = await axios.post(`${getBaseUrl()}/signup`, {
+        username,
+        email,
+        password,
       });
-
-      if (response.status === 201) {
-        Alert.alert("Success", "User registered successfully");
+      if (response.status === 200) {
+        Alert.alert('Success', 'User signed up successfully');
         onSignUp();
-      } else {
-        const data = await response.json();
-        Alert.alert("Error", data.message || "Registration failed");
       }
     } catch (error) {
-      Alert.alert("Error", "Registration failed. Please check your network connection and try again.");
+      Alert.alert('Error', 'Failed to sign up');
+      console.error('Error signing up:', error);
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign Up</Text>
+      
       <TextInput
         style={styles.input}
         placeholder="Username"
         value={username}
         onChangeText={setUsername}
       />
+
       <TextInput
         style={styles.input}
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
+        keyboardType="email-address"
       />
+
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -54,6 +63,7 @@ const SignUpScreen = ({ onSignUp }: { onSignUp: () => void }) => {
         onChangeText={setPassword}
         secureTextEntry
       />
+
       <Button title="Sign Up" onPress={handleSignUp} />
     </View>
   );
@@ -62,21 +72,21 @@ const SignUpScreen = ({ onSignUp }: { onSignUp: () => void }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
+    justifyContent: 'center',
+    padding: 20,
   },
   title: {
     fontSize: 24,
-    marginBottom: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
   },
   input: {
-    width: "80%",
-    padding: 8,
-    marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 4,
+    borderColor: '#ccc',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
   },
 });
 
