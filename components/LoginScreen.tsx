@@ -1,15 +1,34 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
+import axios from 'axios';
+import { Platform } from 'react-native';
 
 const LoginScreen = ({ onLogin, onNavigateToSignUp }: { onLogin: () => void, onNavigateToSignUp: () => void }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    if (username === "user" && password === "password") {
-      onLogin();
+  const getBaseUrl = () => {
+    if (Platform.OS === 'android') {
+      return 'http://10.0.2.2:5000';
     } else {
+      return 'http://localhost:5000';
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post(`${getBaseUrl()}/login`, {
+        username,
+        password,
+      });
+      if (response.status === 200) {
+        const { token } = response.data;
+        // Store the token and use it for subsequent requests
+        onLogin();
+      }
+    } catch (error) {
       Alert.alert("Invalid credentials", "Please enter the correct username and password.");
+      console.error('Error during login:', error);
     }
   };
 

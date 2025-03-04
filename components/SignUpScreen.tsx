@@ -5,9 +5,10 @@ import { Platform } from 'react-native';
 
 interface SignUpScreenProps {
   onSignUp: () => void;
+  onNavigateToLogin: () => void;
 }
 
-const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp }) => {
+const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin }) => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -65,6 +66,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp }) => {
       />
 
       <Button title="Sign Up" onPress={handleSignUp} />
+      <Button title="Back to Login" onPress={onNavigateToLogin} />
     </View>
   );
 };
