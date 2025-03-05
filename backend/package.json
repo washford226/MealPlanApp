@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.2",
     "backend": "file:",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
