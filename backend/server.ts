@@ -3,9 +3,7 @@ import mysql from "mysql2/promise";
 import cors from "cors";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
-import mealRoutes from "../meal-api/src/routes/mealRoutes";
-import userRoutes from "../meal-api/src/routes/userRoutes";
-import { saveUsersToDatabase } from "../meal-api/src/controllers/userController"; // Import the saveUsersToDatabase function
+import routes from './routes';
 
 dotenv.config();
 
@@ -32,15 +30,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.use(bodyParser.json()); // Parse incoming JSON data
 
-// Use meal routes
-app.use('/api/meals', mealRoutes);
-
-// Use user routes
-app.use('/api/users', userRoutes);
-
-app.get('/', (req: Request, res: Response) => {
-  res.send('Welcome to the Meal API');
-});
+// Use the routes defined in routes.ts
+app.use('/', routes);
 
 // Starts the server
 const PORT = process.env.PORT || 5000;
@@ -49,9 +40,6 @@ app.listen(PORT, async () => {
     await db.getConnection();
     console.log("Connected to MySQL database.");
     console.log(`Server running on port ${PORT}`);
-
-    // Save users to database when the server starts
-    await saveUsersToDatabase();
   } catch (err) {
     console.error("Database connection failed: ", err);
     process.exit(1); // Exit the process with failure
