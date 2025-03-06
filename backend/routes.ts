@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import authMiddleware from './authMiddleware';
 
 const router = Router();
 
@@ -38,17 +39,13 @@ router.post('/login', (req: Request, res: Response) => {
   const { username, password } = req.body;
   const db = (req as any).db;
 
-  interface QueryResult {
-    rows: User[];
-  }
-
   db.query('SELECT * FROM users WHERE username = ?', [username])
     .then(([rows]: [User[], any]) => {
       if (rows.length === 0) {
         return res.status(404).send('User does not exist');
       }
 
-      const user: User = rows[0];
+      const user = rows[0];
       return bcrypt.compare(password, user.password)
         .then((isPasswordValid: boolean) => {
           if (!isPasswordValid) {
@@ -71,7 +68,7 @@ router.post('/login', (req: Request, res: Response) => {
 });
 
 // Edit user information
-router.put('/user/:id', (req: Request, res: Response) => {
+router.put('/user/:id', authMiddleware, (req: Request, res: Response) => {
   const { id } = req.params;
   const { username, email, password } = req.body;
   const db = (req as any).db;
@@ -81,60 +78,49 @@ router.put('/user/:id', (req: Request, res: Response) => {
     return db.query(query, [username, email, hashedPassword, id]);
   };
 
-  interface UpdateUserRequest extends Request {
-    body: {
-      username: string;
-      email: string;
-      password?: string;
-    };
-    params: {
-      id: string;
-    };
-    db: any;
-  }
-
   (password ? bcrypt.hash(password, 10).then((hashedPassword: string) => updateUser(hashedPassword)) : updateUser())
     .then(() => {
-    res.status(200).send('User updated successfully');
+      res.status(200).send('User updated successfully');
     })
     .catch((err: Error) => {
-    console.error('Error updating user:', err);
-    res.status(500).send('Error updating user');
+      console.error('Error updating user:', err);
+      res.status(500).send('Error updating user');
     });
 });
 
 // Delete user
-router.delete('/user/:id', (req: Request, res: Response) => {
+router.delete('/user/:id', authMiddleware, (req: Request, res: Response) => {
   const { id } = req.params;
   const db = (req as any).db;
 
   const query = 'DELETE FROM users WHERE id = ?';
-  interface DeleteUserRequest extends Request {
-    params: {
-      id: string;
-    };
-    db: any;
-  }
+  db.query(query, [id])
+    .then(() => {
+      res.status(200).send('User deleted successfully');
+    })
+    .catch((err: Error) => {
+      console.error('Error deleting user:', err);
+      res.status(500).send('Error deleting user');
+    });
+});
 
-  const deleteUserHandler = (req: DeleteUserRequest, res: Response) => {
-    const { id } = req.params;
-    const db = req.db;
-  
-    const query = 'DELETE FROM users WHERE id = ?';
-  
-    db.query(query, [id])
-      .then(() => {
-        res.status(200).send('User deleted successfully');
-      })
-      .catch((err: Error) => {
-        console.error('Error deleting user:', err);
-        res.status(500).send('Error deleting user');
-      });
-  };
-  
-  router.delete('/user/:id', (req: Request, res: Response) => {
-    deleteUserHandler(req as DeleteUserRequest, res);
-  });
+// Get user information
+router.get('/user', authMiddleware, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const db = (req as any).db;
+
+  db.query('SELECT username FROM users WHERE id = ?', [user.id])
+    .then(([rows]: [User[], any]) => {
+      if (rows.length === 0) {
+        return res.status(404).send('User not found');
+      }
+
+      res.status(200).json(rows[0]);
+    })
+    .catch((err: Error) => {
+      console.error('Error fetching user data:', err);
+      res.status(500).send('Error fetching user data');
+    });
 });
 
 export default router;
