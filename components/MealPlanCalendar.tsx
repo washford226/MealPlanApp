@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Button, Modal, TextInput, Alert } from "react-native";
-import { format, startOfWeek, addDays, subWeeks, isSameDay } from "date-fns";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Button } from "react-native";
+import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 
-const MealPlanCalendar = () => {
+const MealPlanCalendar = ({ navigation }) => {
   const today = new Date();
   const [weeksToShow, setWeeksToShow] = useState(1);
   const [startDate, setStartDate] = useState(startOfWeek(today, { weekStartsOn: 0 }));
@@ -15,6 +15,12 @@ const MealPlanCalendar = () => {
   type Meal = {
     name: string;
     color: string;
+    description?: string;
+    ingredients?: string;
+    calories?: number;
+    protein?: number;
+    carbohydrates?: number;
+    fat?: number;
   };
   
   type Meals = {
@@ -45,11 +51,7 @@ const MealPlanCalendar = () => {
   };
 
   const [meals, setMeals] = useState<Meals>(initializeMeals(days, {} as Meals));
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [newMealName, setNewMealName] = useState('');
   const [selectedDay, setSelectedDay] = useState('');
-  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
 
   // Update meals when weeksToShow or startDate changes
   useEffect(() => {
@@ -67,64 +69,10 @@ const MealPlanCalendar = () => {
     }
   }, [days]); // Dependency array includes days to ensure it runs when days change
 
-  // Function to add a new meal
-  const addMeal = () => {
-    if (meals[selectedDay].some(meal => meal.name === newMealName)) {
-      Alert.alert("Error", "Meal name already exists for this day.");
-      return;
-    }
-    const newMeal: Meal = { name: newMealName, color: mealColors.Snack };
-    setMeals((prevMeals) => ({
-      ...prevMeals,
-      [selectedDay]: [...prevMeals[selectedDay], newMeal],
-    }));
-    setModalVisible(false);
-    setNewMealName('');
-  };
-
   // Function to open the modal for adding a meal
   const openModal = (day: string) => {
     setSelectedDay(day);
-    setModalVisible(true);
-  };
-
-  // Function to open the modal for editing a meal
-  const openEditModal = (day: string, meal: Meal) => {
-    setSelectedDay(day);
-    setSelectedMeal(meal);
-    setNewMealName(meal.name);
-    setEditModalVisible(true);
-  };
-
-  // Function to delete a meal
-  const deleteMeal = () => {
-    if (selectedMeal) {
-      setMeals((prevMeals) => ({
-        ...prevMeals,
-        [selectedDay]: prevMeals[selectedDay].filter(meal => meal.name !== selectedMeal.name),
-      }));
-      setEditModalVisible(false);
-      setSelectedMeal(null);
-    }
-  };
-
-  // Function to rename a meal
-  const renameMeal = () => {
-    if (selectedMeal) {
-      if (meals[selectedDay].some(meal => meal.name === newMealName)) {
-        Alert.alert("Error", "Meal name already exists for this day.");
-        return;
-      }
-      setMeals((prevMeals) => ({
-        ...prevMeals,
-        [selectedDay]: prevMeals[selectedDay].map(meal =>
-          meal.name === selectedMeal.name ? { ...meal, name: newMealName } : meal
-        ),
-      }));
-      setEditModalVisible(false);
-      setSelectedMeal(null);
-      setNewMealName('');
-    }
+    navigation.navigate('NewMealScreen', { day });
   };
 
   // Function to show more days (add another week)
@@ -169,43 +117,6 @@ const MealPlanCalendar = () => {
           <Button title="Show More Days" onPress={showMoreDays} />
         </View>
       </ScrollView>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalView}>
-          <Text style={styles.modalText}>Enter Meal Name:</Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={setNewMealName}
-            value={newMealName}
-            placeholder="Meal Name"
-          />
-          <Button title="Add" onPress={addMeal} />
-          <Button title="Cancel" onPress={() => setModalVisible(false)} />
-        </View>
-      </Modal>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={editModalVisible}
-        onRequestClose={() => setEditModalVisible(false)}
-      >
-        <View style={styles.modalView}>
-          <Text style={styles.modalText}>Edit Meal Name:</Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={setNewMealName}
-            value={newMealName}
-            placeholder="Meal Name"
-          />
-          <Button title="Rename" onPress={renameMeal} />
-          <Button title="Delete" onPress={deleteMeal} />
-          <Button title="Cancel" onPress={() => setEditModalVisible(false)} />
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -256,33 +167,6 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 4,
     backgroundColor: '#eee',
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 35,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 15,
-    paddingLeft: 10,
-    width: '80%',
   },
 });
 
