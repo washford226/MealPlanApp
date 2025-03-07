@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
 import axios from 'axios';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = ({ onLogin, onNavigateToSignUp }: { onLogin: () => void, onNavigateToSignUp: () => void }) => {
   const [username, setUsername] = useState("");
@@ -24,6 +25,7 @@ const LoginScreen = ({ onLogin, onNavigateToSignUp }: { onLogin: () => void, onN
       if (response.status === 200) {
         const { token } = response.data;
         // Store the token and use it for subsequent requests
+        await AsyncStorage.setItem('token', token);
         onLogin();
       }
     } catch (error) {

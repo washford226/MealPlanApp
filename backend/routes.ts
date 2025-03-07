@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import authMiddleware from './authMiddleware';
 
 const router = Router();
 
@@ -16,79 +17,110 @@ router.get('/', (req: Request, res: Response) => {
   res.send('Welcome to the Meal API');
 });
 
-router.post('/signup', async (req: Request, res: Response) => {
+router.post('/signup', (req: Request, res: Response) => {
   const { username, email, password } = req.body;
   const db = (req as any).db;
 
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const query = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
-    await db.query(query, [username, email, hashedPassword]);
-    res.status(200).send('User signed up successfully');
-  } catch (err) {
-    console.error('Error inserting data:', err);
-    res.status(500).send('Error inserting data');
-  }
+  bcrypt.hash(password, 10)
+    .then(hashedPassword => {
+      const query = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
+      return db.query(query, [username, email, hashedPassword]);
+    })
+    .then(() => {
+      res.status(200).send('User signed up successfully');
+    })
+    .catch(err => {
+      console.error('Error inserting data:', err);
+      res.status(500).send('Error inserting data');
+    });
 });
 
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', (req: Request, res: Response) => {
   const { username, password } = req.body;
   const db = (req as any).db;
 
-  try {
-    const [rows]: [User[], any] = await db.query('SELECT * FROM users WHERE username = ?', [username]);
-    if (rows.length === 0) {
-      return res.status(404).send('User does not exist');
-    }
+  db.query('SELECT * FROM users WHERE username = ?', [username])
+    .then(([rows]: [User[], any]) => {
+      if (rows.length === 0) {
+        return res.status(404).send('User does not exist');
+      }
 
-    const user = rows[0];
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(400).send('Password incorrect');
-    }
+      const user = rows[0];
+      return bcrypt.compare(password, user.password)
+        .then((isPasswordValid: boolean) => {
+          if (!isPasswordValid) {
+            return res.status(400).send('Password incorrect');
+          }
 
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      return res.status(500).send('JWT secret is not defined');
-    }
-    const token = jwt.sign({ id: user.id, username: user.username }, secret, { expiresIn: '1h' });
-    res.status(200).json({ message: 'User logged in successfully', token });
-  } catch (err) {
-    console.error('Error logging in:', err);
-    res.status(500).send('Error logging in');
-  }
+          const secret: string | undefined = process.env.JWT_SECRET;
+          if (!secret) {
+            return res.status(500).send('JWT secret is not defined');
+          }
+
+          const token: string = jwt.sign({ id: user.id, username: user.username }, secret, { expiresIn: '1h' });
+          res.status(200).json({ message: 'User logged in successfully', token });
+        });
+    })
+    .catch((err: Error) => {
+      console.error('Error logging in:', err);
+      res.status(500).send('Error logging in');
+    });
 });
 
 // Edit user information
-router.put('/user/:id', async (req: Request, res: Response) => {
+router.put('/user/:id', authMiddleware, (req: Request, res: Response) => {
   const { id } = req.params;
   const { username, email, password } = req.body;
   const db = (req as any).db;
 
-  try {
-    const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
+  const updateUser = (hashedPassword?: string) => {
     const query = 'UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?';
-    await db.query(query, [username, email, hashedPassword, id]);
-    res.status(200).send('User updated successfully');
-  } catch (err) {
-    console.error('Error updating user:', err);
-    res.status(500).send('Error updating user');
-  }
+    return db.query(query, [username, email, hashedPassword, id]);
+  };
+
+  (password ? bcrypt.hash(password, 10).then((hashedPassword: string) => updateUser(hashedPassword)) : updateUser())
+    .then(() => {
+      res.status(200).send('User updated successfully');
+    })
+    .catch((err: Error) => {
+      console.error('Error updating user:', err);
+      res.status(500).send('Error updating user');
+    });
 });
 
 // Delete user
-router.delete('/user/:id', async (req: Request, res: Response) => {
+router.delete('/user/:id', authMiddleware, (req: Request, res: Response) => {
   const { id } = req.params;
   const db = (req as any).db;
 
-  try {
-    const query = 'DELETE FROM users WHERE id = ?';
-    await db.query(query, [id]);
-    res.status(200).send('User deleted successfully');
-  } catch (err) {
-    console.error('Error deleting user:', err);
-    res.status(500).send('Error deleting user');
-  }
+  const query = 'DELETE FROM users WHERE id = ?';
+  db.query(query, [id])
+    .then(() => {
+      res.status(200).send('User deleted successfully');
+    })
+    .catch((err: Error) => {
+      console.error('Error deleting user:', err);
+      res.status(500).send('Error deleting user');
+    });
+});
+
+// Get user information
+router.get('/user', authMiddleware, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const db = (req as any).db;
+
+  db.query('SELECT username FROM users WHERE id = ?', [user.id])
+    .then(([rows]: [User[], any]) => {
+      if (rows.length === 0) {
+        return res.status(404).send('User not found');
+      }
+
+      res.status(200).json(rows[0]);
+    })
+    .catch((err: Error) => {
+      console.error('Error fetching user data:', err);
+      res.status(500).send('Error fetching user data');
+    });
 });
 
 export default router;

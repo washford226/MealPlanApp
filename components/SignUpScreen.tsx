@@ -33,7 +33,12 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
         onSignUp();
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to sign up');
+      if ((error as any).response && (error as any).response.data) {
+        const errorMessage = (error as any).response?.data?.message || 'Failed to sign up';
+        Alert.alert('Error', errorMessage);
+      } else {
+        Alert.alert('Error', 'Failed to sign up');
+      }
       console.error('Error signing up:', error);
     }
   };
