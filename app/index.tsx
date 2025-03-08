@@ -4,12 +4,14 @@ import MealPlanCalendar from '@/components/MealPlanCalendar';
 import LoginScreen from '@/components/LoginScreen';
 import SignUpScreen from '@/components/SignUpScreen';
 import AccountScreen from '@/components/AccountScreen';
+import ChangePasswordScreen from '@/components/ChangePasswordScreen'; 
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 export default function Index() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [isAccountScreen, setIsAccountScreen] = useState(false);
+  const [isChangePasswordScreen, setIsChangePasswordScreen] = useState(false); // Add state for change password screen
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -35,11 +37,21 @@ export default function Index() {
     setIsAccountScreen(false);
   };
 
+  const handleChangePassword = () => {
+    setIsChangePasswordScreen(true);
+  };
+
+  const handleBackToAccount = () => {
+    setIsChangePasswordScreen(false);
+  };
+
   return (
     <View style={styles.container}>
       {isLoggedIn ? (
-        isAccountScreen ? (
-          <AccountScreen onBackToCalendar={handleBackToCalendar} onLogout={() => setIsLoggedIn(false)} />
+        isChangePasswordScreen ? (
+          <ChangePasswordScreen onBackToAccount={handleBackToAccount} />
+        ) : isAccountScreen ? (
+          <AccountScreen onBackToCalendar={handleBackToCalendar} onLogout={() => setIsLoggedIn(false)} onChangePassword={handleChangePassword} />
         ) : (
           <>
             <View style={styles.header}>
