@@ -13,6 +13,7 @@ interface User {
   email: string;
   password: string;
   created_at: Date;
+  profile_picture: string | Blob;
 }
 
 router.get('/', (req: Request, res: Response) => {
@@ -20,12 +21,12 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 router.post('/signup', upload.single('profile_picture'), (req: Request, res: Response) => {
-  const { username, email, password, calories_goal, diatary_restrictions } = req.body;
+  const { username, email, password, calories_goal, dietary_restrictions } = req.body;
   const profilePicture = req.file?.buffer;
   const db = (req as any).db;
 
   db.query('SELECT * FROM users WHERE username = ? OR email = ?', [username, email])
-    .then(([rows]: [User[], any]) => {
+    .then(async ([rows]: [User[], any]) => {
       if (rows.length > 0) {
         return res.status(400).send({ message: 'Username or email already exists' });
       }
@@ -33,8 +34,8 @@ router.post('/signup', upload.single('profile_picture'), (req: Request, res: Res
       return bcrypt.hash(password, 10);
     })
     .then((hashedPassword: string) => {
-      const query = 'INSERT INTO users (username, email, password, calories_goal, diatary_restrictions, profile_picture) VALUES (?, ?, ?, ?, ?, ?)';
-      return db.query(query, [username, email, hashedPassword, calories_goal, diatary_restrictions, profilePicture]);
+      const query = 'INSERT INTO users (username, email, password, calories_goal, dietary_restrictions, profile_picture) VALUES (?, ?, ?, ?, ?, ?)';
+      return db.query(query, [username, email, hashedPassword, calories_goal, dietary_restrictions, profilePicture]);
     })
     .then(() => {
       res.status(200).send('User signed up successfully');
@@ -119,7 +120,7 @@ router.get('/user', authMiddleware, (req: Request, res: Response) => {
   const user = (req as any).user;
   const db = (req as any).db;
 
-  db.query('SELECT username, calories_goal, diatary_restrictions FROM users WHERE id = ?', [user.id])
+  db.query('SELECT username, calories_goal, dietary_restrictions, profile_picture FROM users WHERE id = ?', [user.id])
     .then(([rows]: [User[], any]) => {
       if (rows.length === 0) {
         return res.status(404).send('User not found');
@@ -204,19 +205,44 @@ router.put('/user/calories-goal', authMiddleware, (req: Request, res: Response) 
     });
 });
 
-router.put('/user/diatary-restrictions', authMiddleware, (req: Request, res: Response) => {
-  const { diatary_restrictions } = req.body;
+router.put('/user/dietary-restrictions', authMiddleware, (req: Request, res: Response) => {
+  const { dietary_restrictions } = req.body;
   const user = (req as any).user;
   const db = (req as any).db;
 
-  const query = 'UPDATE users SET diatary_restrictions = ? WHERE id = ?';
-  db.query(query, [diatary_restrictions, user.id])
+  const query = 'UPDATE users SET dietary_restrictions = ? WHERE id = ?';
+  db.query(query, [dietary_restrictions, user.id])
     .then(() => {
-      res.status(200).send('Diatary restrictions updated successfully');
+      res.status(200).send('Dietary restrictions updated successfully');
     })
     .catch((err: Error) => {
-      console.error('Error updating diatary restrictions:', err);
-      res.status(500).send('Error updating diatary restrictions');
+      console.error('Error updating dietary restrictions:', err);
+      res.status(500).send('Error updating dietary restrictions');
+    });
+});
+
+router.get('/user/get-picture', authMiddleware, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const db = (req as any).db;
+
+  db.query('SELECT username, calories_goal, dietary_restrictions, profile_picture FROM users WHERE id = ?', [user.id])
+    .then(([rows]: [User[], any]) => {
+      if (rows.length === 0) {
+        return res.status(404).send('User not found');
+      }
+
+      const userData = rows[0];
+      if (userData.profile_picture) {
+        if (typeof userData.profile_picture === 'string') {
+          userData.profile_picture = Buffer.from(userData.profile_picture).toString('base64');
+        }
+      }
+
+      res.status(200).json(userData);
+    })
+    .catch((err: Error) => {
+      console.error('Error fetching user data:', err);
+      res.status(500).send('Error fetching user data');
     });
 });
 

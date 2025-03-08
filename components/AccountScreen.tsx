@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, TextInput, Button, StyleSheet, Image } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
@@ -16,10 +16,10 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
   const [caloriesGoal, setCaloriesGoal] = useState<number | null>(null);
   const [isEditingCaloriesGoal, setIsEditingCaloriesGoal] = useState<boolean>(false);
   const [newCaloriesGoal, setNewCaloriesGoal] = useState<string>('');
-  const [profilePicture, setProfilePicture] = useState<ImagePicker.ImagePickerAsset | null>(null);
-  const [diataryRestrictions, setDiataryRestrictions] = useState<string>('');
-  const [isEditingDiataryRestrictions, setIsEditingDiataryRestrictions] = useState<boolean>(false);
-  const [newDiataryRestrictions, setNewDiataryRestrictions] = useState<string>('');
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [dietaryRestrictions, setDietaryRestrictions] = useState<string>('');
+  const [isEditingDietaryRestrictions, setIsEditingDietaryRestrictions] = useState<boolean>(false);
+  const [newDietaryRestrictions, setNewDietaryRestrictions] = useState<string>('');
 
   // Fetch user data when the component mounts
   useEffect(() => {
@@ -38,8 +38,11 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
 
         setUsername(response.data.username);
         setCaloriesGoal(response.data.calories_goal);
-        setDiataryRestrictions(response.data.diatary_restrictions);
-        setProfilePicture(response.data.profile_picture);
+        setDietaryRestrictions(response.data.dietary_restrictions);
+        if (response.data.profile_picture) {
+          setProfilePicture(`data:image/jpeg;base64,${response.data.profile_picture}`);
+        }
+        console.log('Fetched profile picture:', response.data.profile_picture); // Debugging log
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -109,16 +112,16 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
     }
   };
 
-  // Handle editing diatary restrictions
-  const handleEditDiataryRestrictions = async () => {
+  // Handle editing dietary restrictions
+  const handleEditDietaryRestrictions = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         throw new Error('No token found');
       }
 
-      const response = await axios.put('http://10.0.2.2:5000/user/diatary-restrictions', {
-        diatary_restrictions: newDiataryRestrictions
+      const response = await axios.put('http://10.0.2.2:5000/user/dietary-restrictions', {
+        dietary_restrictions: newDietaryRestrictions
       }, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -126,13 +129,13 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
       });
 
       if (response.status === 200) {
-        setDiataryRestrictions(newDiataryRestrictions);
-        setIsEditingDiataryRestrictions(false);
-        Alert.alert('Success', 'Diatary restrictions updated successfully');
+        setDietaryRestrictions(newDietaryRestrictions);
+        setIsEditingDietaryRestrictions(false);
+        Alert.alert('Success', 'Dietary restrictions updated successfully');
       }
     } catch (error) {
-      console.error('Error updating diatary restrictions:', error);
-      Alert.alert('Error', 'Failed to update diatary restrictions');
+      console.error('Error updating dietary restrictions:', error);
+      Alert.alert('Error', 'Failed to update dietary restrictions');
     }
   };
 
@@ -150,9 +153,9 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
 
       const formData = new FormData();
       formData.append('profile_picture', {
-        uri: profilePicture.uri,
-        type: profilePicture.type,
-        name: profilePicture.fileName
+        uri: profilePicture,
+        type: 'image/jpeg',
+        name: 'profile_picture.jpg'
       } as any);
 
       const response = await axios.post('http://10.0.2.2:5000/upload-profile-picture', formData, {
@@ -181,7 +184,8 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
     });
 
     if (!result.canceled) {
-      setProfilePicture(result.assets[0]);
+      setProfilePicture(result.assets[0].uri);
+      console.log('Selected profile picture:', result.assets[0].uri); // Debugging log
     }
   };
 
@@ -193,6 +197,12 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
       </TouchableOpacity>
       <Text style={styles.title}>Account Screen</Text>
       <Text>Welcome, {username}!</Text>
+      {profilePicture && (
+        <Image
+          source={{ uri: profilePicture }}
+          style={styles.profilePicture}
+        />
+      )}
       <View style={styles.row}>
         <Text style={styles.leftAlignText}>Calories Goal: {caloriesGoal}</Text>
         <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingCaloriesGoal(true)}>
@@ -217,23 +227,23 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
         </View>
       )}
       <View style={styles.row}>
-        <Text style={styles.leftAlignText}>Diatary Restrictions: {diataryRestrictions}</Text>
-        <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingDiataryRestrictions(true)}>
+        <Text style={styles.leftAlignText}>Dietary Restrictions: {dietaryRestrictions}</Text>
+        <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingDietaryRestrictions(true)}>
           <Text style={styles.editButtonText}>Edit</Text>
         </TouchableOpacity>
       </View>
-      {isEditingDiataryRestrictions && (
+      {isEditingDietaryRestrictions && (
         <View>
           <TextInput
             style={styles.input}
-            placeholder="Enter new diatary restrictions"
-            value={newDiataryRestrictions}
-            onChangeText={setNewDiataryRestrictions}
+            placeholder="Enter new dietary restrictions"
+            value={newDietaryRestrictions}
+            onChangeText={setNewDietaryRestrictions}
           />
-          <TouchableOpacity onPress={handleEditDiataryRestrictions}>
+          <TouchableOpacity onPress={handleEditDietaryRestrictions}>
             <Text style={{ color: 'blue', marginTop: 10 }}>Save</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setIsEditingDiataryRestrictions(false)}>
+          <TouchableOpacity onPress={() => setIsEditingDietaryRestrictions(false)}>
             <Text style={{ color: 'red', marginTop: 10 }}>Cancel</Text>
           </TouchableOpacity>
         </View>
@@ -243,7 +253,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
       </TouchableOpacity>
       {profilePicture && (
         <View>
-          <Text>Selected Picture: {profilePicture.fileName}</Text>
+          <Text>Selected Picture: {profilePicture}</Text>
           <Button title="Upload Profile Picture" onPress={handleUploadProfilePicture} />
         </View>
       )}
@@ -274,6 +284,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
+    marginBottom: 20,
+  },
+  profilePicture: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     marginBottom: 20,
   },
   row: {
