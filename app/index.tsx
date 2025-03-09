@@ -6,6 +6,23 @@ import SignUpScreen from '@/components/SignUpScreen';
 import AccountScreen from '@/components/AccountScreen';
 import ChangePasswordScreen from '@/components/ChangePasswordScreen'; 
 import Icon from 'react-native-vector-icons/FontAwesome';
+import 'react-native-gesture-handler';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import AddMealScreen from '@/components/AddMealScreen';
+
+const Stack = createStackNavigator();
+
+const App = () => {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="MealPlanCalendar">
+        <Stack.Screen name="MealPlanCalendar" component={MealPlanCalendar} />
+        <Stack.Screen name="AddMealScreen" component={AddMealScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+};
 
 export default function Index() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -53,15 +70,7 @@ export default function Index() {
         ) : isAccountScreen ? (
           <AccountScreen onBackToCalendar={handleBackToCalendar} onLogout={() => setIsLoggedIn(false)} onChangePassword={handleChangePassword} />
         ) : (
-          <>
-            <View style={styles.header}>
-              <Text style={styles.title}>My Calendar</Text>
-              <TouchableOpacity onPress={handleNavigateToAccount}>
-                <Icon name="user" size={30} color="#000" />
-              </TouchableOpacity>
-            </View>
-            <MealPlanCalendar />
-          </>
+          <App />
         )
       ) : isSigningUp ? (
         <SignUpScreen onSignUp={handleSignUp} onNavigateToLogin={handleNavigateToLogin} />

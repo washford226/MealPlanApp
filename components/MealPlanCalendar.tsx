@@ -1,13 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Button, Modal, TextInput, Alert } from "react-native";
 import { format, startOfWeek, addDays, subWeeks, isSameDay } from "date-fns";
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from "@react-navigation/stack";
+
+type RootStackParamList = {
+  AddMealScreen: { day: string };
+};
 
 const MealPlanCalendar = () => {
   const today = new Date();
-  const [weeksToShow, setWeeksToShow] = useState(1);
   const [startDate, setStartDate] = useState(startOfWeek(today, { weekStartsOn: 0 }));
   const scrollViewRef = useRef<ScrollView>(null);
+  const [weeksToShow, setWeeksToShow] = useState(1);
   const hasCenteredOnToday = useRef(false);
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   // Generate an array of days based on the number of weeks to show
   const days = Array.from({ length: 7 * weeksToShow }, (_, i) => addDays(startDate, i));
@@ -162,7 +169,7 @@ const MealPlanCalendar = () => {
                     </TouchableOpacity>
                   ))}
                 </View>
-                <Button title="Add Meal" onPress={() => openModal(dayString)} />
+                <Button title="Add Meal" onPress={() => navigation.navigate('AddMealScreen', { day: dayString })} />
               </View>
             );
           })}
