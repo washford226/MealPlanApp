@@ -17,7 +17,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [caloriesGoal, setCaloriesGoal] = useState('');
-  const [diataryRestrictions, setDiataryRestrictions] = useState('');
+  const [dietaryRestrictions, setDietaryRestrictions] = useState('');
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
 
   // Function to get the base URL based on the platform
@@ -52,7 +52,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
     formData.append('email', email);
     formData.append('password', password);
     if (caloriesGoal) formData.append('calories_goal', caloriesGoal);
-    if (diataryRestrictions) formData.append('diatary_restrictions', diataryRestrictions);
+    if (dietaryRestrictions) formData.append('dietary_restrictions', dietaryRestrictions);
     if (profilePicture) {
       const uriParts = profilePicture.split('.');
       const fileType = uriParts[uriParts.length - 1];
@@ -87,7 +87,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
   // Function to handle picking an image from the gallery
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: [ImagePicker.MediaType.Images],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
@@ -142,9 +142,9 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
       />
       <TextInput
         style={styles.largeInput}
-        placeholder="Diatary Restrictions (optional)"
-        value={diataryRestrictions}
-        onChangeText={setDiataryRestrictions}
+        placeholder="Dietary Restrictions (optional)"
+        value={dietaryRestrictions}
+        onChangeText={setDietaryRestrictions}
       />
       <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
         <Text style={styles.uploadButtonText}>Upload Profile Picture (optional)</Text>
