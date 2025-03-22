@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Image } from 'react-native';
 import axios from 'axios';
 import { Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -11,7 +11,6 @@ interface SignUpScreenProps {
 }
 
 const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin }) => {
-  // State variables to manage form inputs
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,22 +19,27 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
   const [dietaryRestrictions, setDietaryRestrictions] = useState('');
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
 
-  // Function to get the base URL based on the platform
-  const getBaseUrl = () => {
-    if (Platform.OS === 'android') {
-      return 'http://10.0.2.2:5000';
-    } else {
-      return 'http://localhost:5000';
+  // Request media library permissions
+  const requestPermission = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'We need access to your gallery to pick an image.');
     }
   };
 
-  // Function to validate email format
+  useEffect(() => {
+    requestPermission();
+  }, []);
+
+  const getBaseUrl = () => {
+    return Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000';
+  };
+
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
   };
 
-  // Function to handle sign-up process
   const handleSignUp = async () => {
     if (!username || !email || !password) {
       Alert.alert('Error', 'All fields are required');
@@ -84,12 +88,11 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
     }
   };
 
-  // Function to handle picking an image from the gallery
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Correct usage for picking images
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: [3, 3],
       quality: 1,
     });
 
@@ -130,7 +133,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
           style={styles.showPasswordButton}
           onPress={() => setIsPasswordVisible(!isPasswordVisible)}
         >
-          <Text>{isPasswordVisible ? "Hide" : "Show"}</Text>
+          <Text>{isPasswordVisible ? 'Hide' : 'Show'}</Text>
         </TouchableOpacity>
       </View>
       <TextInput
@@ -149,7 +152,12 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
       <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
         <Text style={styles.uploadButtonText}>Upload Profile Picture (optional)</Text>
       </TouchableOpacity>
-      {profilePicture && <Text style={styles.uploadedText}>Profile picture selected</Text>}
+      {profilePicture && (
+        <Image
+          source={{ uri: profilePicture }}
+          style={styles.profilePicture}
+        />
+      )}
       <Button title="Sign Up" onPress={handleSignUp} />
     </View>
   );
@@ -179,12 +187,12 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 10,
     borderRadius: 5,
-    width: '100%', // Increased width
+    width: '100%',
   },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%', // Increased width
+    width: '100%',
   },
   passwordInput: {
     borderWidth: 1,
@@ -207,9 +215,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
   },
-  uploadedText: {
+  profilePicture: {
+    width: 150,
+    height: 150,
+    borderRadius: 75, // Makes the image circular
     marginBottom: 10,
-    color: 'green',
+    borderWidth: 2, // Optional: Add a border
+    borderColor: '#ccc', // Optional: Border color
   },
 });
 

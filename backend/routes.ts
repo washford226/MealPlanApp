@@ -46,6 +46,7 @@ router.post('/signup', upload.single('profile_picture'), (req: Request, res: Res
     });
 });
 
+// Login user
 router.post('/login', (req: Request, res: Response) => {
   const { username, password } = req.body;
   const db = (req as any).db;
@@ -78,25 +79,61 @@ router.post('/login', (req: Request, res: Response) => {
     });
 });
 
-// Edit user information
-router.put('/user/:id', authMiddleware, (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { username, email, password } = req.body;
+const buildUpdateQuery = (fields: Record<string, any>) => {
+  const fieldsToUpdate = [];
+  const values = [];
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (value !== undefined) {
+      fieldsToUpdate.push(`${key} = ?`);
+      values.push(value);
+    }
+  }
+
+  return { query: fieldsToUpdate.join(', '), values };
+};
+
+// Update user information (including calories_goal and dietary_restrictions) using username
+router.put('/user/:username', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const { username } = req.params; // Extract the username from the route parameter
+  const { email, password, calories_goal, dietary_restrictions } = req.body; // Extract fields from the request body
+  const user = (req as any).user; // Authenticated user from the middleware
   const db = (req as any).db;
 
-  const updateUser = (hashedPassword?: string) => {
-    const query = 'UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?';
-    return db.query(query, [username, email, hashedPassword, id]);
-  };
+  // Ensure the authenticated user is updating their own data
+  if (username !== user.username) {
+    res.status(403).send('You are not authorized to update this user');
+    return Promise.resolve();
+  }
 
-  (password ? bcrypt.hash(password, 10).then((hashedPassword: string) => updateUser(hashedPassword)) : updateUser())
-    .then(() => {
-      res.status(200).send('User updated successfully');
-    })
-    .catch((err: Error) => {
-      console.error('Error updating user:', err);
-      res.status(500).send('Error updating user');
-    });
+  // Build the query dynamically
+  const fields = { email, password, calories_goal, dietary_restrictions };
+  const { query, values } = buildUpdateQuery(fields);
+
+  if (!query) {
+    res.status(400).send('No fields provided to update');
+    return;
+  }
+
+  try {
+    // Hash the password if it's being updated
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const passwordIndex = Object.keys(fields).indexOf('password');
+      if (passwordIndex !== -1) {
+        values[passwordIndex] = hashedPassword;
+      }
+    }
+
+    const sql = `UPDATE users SET ${query} WHERE username = ?`;
+    values.push(username); // Use the username in the query
+
+    await db.query(sql, values);
+    res.status(200).send('User updated successfully');
+  } catch (err) {
+    console.error('Error updating user:', err);
+    res.status(500).send('Error updating user');
+  }
 });
 
 // Delete user
@@ -134,40 +171,7 @@ router.get('/user', authMiddleware, (req: Request, res: Response) => {
     });
 });
 
-// Change user password
-router.put('/user/change-password', authMiddleware, (req: Request, res: Response) => {
-  const { currentPassword, newPassword } = req.body;
-  const user = (req as any).user;
-  const db = (req as any).db;
-
-  db.query('SELECT password FROM users WHERE id = ?', [user.id])
-    .then(([rows]: [User[], any]) => {
-      if (rows.length === 0) {
-        return res.status(404).send('User not found');
-      }
-
-      const userRecord = rows[0];
-      return bcrypt.compare(currentPassword, userRecord.password)
-        .then((isPasswordValid: boolean) => {
-          if (!isPasswordValid) {
-            return res.status(400).send('Current password is incorrect');
-          }
-
-          return bcrypt.hash(newPassword, 10)
-            .then(hashedNewPassword => {
-              return db.query('UPDATE users SET password = ? WHERE id = ?', [hashedNewPassword, user.id])
-                .then(() => {
-                  res.status(200).send('Password changed successfully');
-                });
-            });
-        });
-    })
-    .catch((err: Error) => {
-      console.error('Error changing password:', err);
-      res.status(500).send('Error changing password');
-    });
-});
-
+// Upload profile picture
 router.post('/upload-profile-picture', authMiddleware, upload.single('profile_picture'), (req: Request, res: Response): void => {
   const user = (req as any).user;
   const db = (req as any).db;
@@ -186,63 +190,6 @@ router.post('/upload-profile-picture', authMiddleware, upload.single('profile_pi
     .catch((err: Error) => {
       console.error('Error uploading profile picture:', err);
       res.status(500).send('Error uploading profile picture');
-    });
-});
-
-router.put('/user/calories-goal', authMiddleware, (req: Request, res: Response) => {
-  const { calories_goal } = req.body;
-  const user = (req as any).user;
-  const db = (req as any).db;
-
-  const query = 'UPDATE users SET calories_goal = ? WHERE id = ?';
-  db.query(query, [calories_goal, user.id])
-    .then(() => {
-      res.status(200).send('Calories goal updated successfully');
-    })
-    .catch((err: Error) => {
-      console.error('Error updating calories goal:', err);
-      res.status(500).send('Error updating calories goal');
-    });
-});
-
-router.put('/user/dietary-restrictions', authMiddleware, (req: Request, res: Response) => {
-  const { dietary_restrictions } = req.body;
-  const user = (req as any).user;
-  const db = (req as any).db;
-
-  const query = 'UPDATE users SET dietary_restrictions = ? WHERE id = ?';
-  db.query(query, [dietary_restrictions, user.id])
-    .then(() => {
-      res.status(200).send('Dietary restrictions updated successfully');
-    })
-    .catch((err: Error) => {
-      console.error('Error updating dietary restrictions:', err);
-      res.status(500).send('Error updating dietary restrictions');
-    });
-});
-
-router.get('/user/get-picture', authMiddleware, (req: Request, res: Response) => {
-  const user = (req as any).user;
-  const db = (req as any).db;
-
-  db.query('SELECT username, calories_goal, dietary_restrictions, profile_picture FROM users WHERE id = ?', [user.id])
-    .then(([rows]: [User[], any]) => {
-      if (rows.length === 0) {
-        return res.status(404).send('User not found');
-      }
-
-      const userData = rows[0];
-      if (userData.profile_picture) {
-        if (typeof userData.profile_picture === 'string') {
-          userData.profile_picture = Buffer.from(userData.profile_picture).toString('base64');
-        }
-      }
-
-      res.status(200).json(userData);
-    })
-    .catch((err: Error) => {
-      console.error('Error fetching user data:', err);
-      res.status(500).send('Error fetching user data');
     });
 });
 

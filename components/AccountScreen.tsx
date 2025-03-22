@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, TextInput, Button, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, TextInput, StyleSheet, Platform } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 interface AccountScreenProps {
@@ -11,12 +10,14 @@ interface AccountScreenProps {
   onChangePassword: () => void;
 }
 
+// Dynamically set the base URL based on the platform
+const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000';
+
 const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogout, onChangePassword }) => {
   const [username, setUsername] = useState<string>('');
   const [caloriesGoal, setCaloriesGoal] = useState<number | null>(null);
   const [isEditingCaloriesGoal, setIsEditingCaloriesGoal] = useState<boolean>(false);
   const [newCaloriesGoal, setNewCaloriesGoal] = useState<string>('');
-  const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string>('');
   const [isEditingDietaryRestrictions, setIsEditingDietaryRestrictions] = useState<boolean>(false);
   const [newDietaryRestrictions, setNewDietaryRestrictions] = useState<string>('');
@@ -30,19 +31,15 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
           throw new Error('No token found');
         }
 
-        const response = await axios.get('http://10.0.2.2:5000/user', {
+        const response = await axios.get(`${BASE_URL}/user`, {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
 
         setUsername(response.data.username);
         setCaloriesGoal(response.data.calories_goal);
         setDietaryRestrictions(response.data.dietary_restrictions);
-        if (response.data.profile_picture) {
-          setProfilePicture(`data:image/jpeg;base64,${response.data.profile_picture}`);
-        }
-        console.log('Fetched profile picture:', response.data.profile_picture); // Debugging log
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -69,10 +66,10 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
         throw new Error('No token found');
       }
 
-      const response = await axios.delete('http://10.0.2.2:5000/userdelete', {
+      const response = await axios.delete(`${BASE_URL}/userdelete`, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (response.status === 200) {
@@ -93,13 +90,15 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
         throw new Error('No token found');
       }
 
-      const response = await axios.put('http://10.0.2.2:5000/user/calories-goal', {
-        calories_goal: newCaloriesGoal
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const response = await axios.put(
+        `${BASE_URL}/user/${username}`, // Use the dynamic /user/:id endpoint
+        { calories_goal: newCaloriesGoal },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       if (response.status === 200) {
         setCaloriesGoal(parseInt(newCaloriesGoal, 10));
@@ -120,13 +119,15 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
         throw new Error('No token found');
       }
 
-      const response = await axios.put('http://10.0.2.2:5000/user/dietary-restrictions', {
-        dietary_restrictions: newDietaryRestrictions
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const response = await axios.put(
+        `${BASE_URL}/user/${username}`, // Use the dynamic /user/:id endpoint
+        { dietary_restrictions: newDietaryRestrictions },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       if (response.status === 200) {
         setDietaryRestrictions(newDietaryRestrictions);
@@ -139,56 +140,6 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
     }
   };
 
-  // Handle uploading profile picture
-  const handleUploadProfilePicture = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('No token found');
-      }
-
-      if (!profilePicture) {
-        throw new Error('No profile picture selected');
-      }
-
-      const formData = new FormData();
-      formData.append('profile_picture', {
-        uri: profilePicture,
-        type: 'image/jpeg',
-        name: 'profile_picture.jpg'
-      } as any);
-
-      const response = await axios.post('http://10.0.2.2:5000/upload-profile-picture', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      if (response.status === 200) {
-        Alert.alert('Success', 'Profile picture uploaded successfully');
-      }
-    } catch (error) {
-      console.error('Error uploading profile picture:', error);
-      Alert.alert('Error', 'Failed to upload profile picture');
-    }
-  };
-
-  // Handle picking an image from the gallery
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setProfilePicture(result.assets[0].uri);
-      console.log('Selected profile picture:', result.assets[0].uri); // Debugging log
-    }
-  };
-
   return (
     <View style={styles.container}>
       {/* Back button to navigate back to the calendar */}
@@ -197,12 +148,6 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
       </TouchableOpacity>
       <Text style={styles.title}>Account Screen</Text>
       <Text>Welcome, {username}!</Text>
-      {profilePicture && (
-        <Image
-          source={{ uri: profilePicture }}
-          style={styles.profilePicture}
-        />
-      )}
       <View style={styles.row}>
         <Text style={styles.leftAlignText}>Calories Goal: {caloriesGoal}</Text>
         <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingCaloriesGoal(true)}>
@@ -248,15 +193,6 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
           </TouchableOpacity>
         </View>
       )}
-      <TouchableOpacity onPress={pickImage}>
-        <Text style={{ color: 'blue', marginTop: 20 }}>Pick Profile Picture</Text>
-      </TouchableOpacity>
-      {profilePicture && (
-        <View>
-          <Text>Selected Picture: {profilePicture}</Text>
-          <Button title="Upload Profile Picture" onPress={handleUploadProfilePicture} />
-        </View>
-      )}
       <TouchableOpacity onPress={handleLogout}>
         <Text style={{ color: 'red', marginTop: 20 }}>Logout</Text>
       </TouchableOpacity>
@@ -284,12 +220,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 20,
-  },
-  profilePicture: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
     marginBottom: 20,
   },
   row: {
