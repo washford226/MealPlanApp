@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, TextInput, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, TextInput, StyleSheet, Platform, Image } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -21,6 +21,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string>('');
   const [isEditingDietaryRestrictions, setIsEditingDietaryRestrictions] = useState<boolean>(false);
   const [newDietaryRestrictions, setNewDietaryRestrictions] = useState<string>('');
+  const [profilePicture, setProfilePicture] = useState<string | null>(null); // State for profile picture
 
   // Fetch user data when the component mounts
   useEffect(() => {
@@ -40,6 +41,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
         setUsername(response.data.username);
         setCaloriesGoal(response.data.calories_goal);
         setDietaryRestrictions(response.data.dietary_restrictions);
+        setProfilePicture(response.data.profile_picture); // Set profile picture
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -146,8 +148,19 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
       <TouchableOpacity style={styles.backButton} onPress={onBackToCalendar}>
         <Icon name="arrow-back" size={24} color="#000" />
       </TouchableOpacity>
-      <Text style={styles.title}>Account Screen</Text>
-      <Text>Welcome, {username}!</Text>
+
+      {/* Profile Picture */}
+      {profilePicture ? (
+        <Image source={{ uri: profilePicture }} style={styles.profilePicture} />
+      ) : (
+        <View style={styles.profilePicturePlaceholder}>
+          <Text style={styles.profilePicturePlaceholderText}>No Picture</Text>
+        </View>
+      )}
+
+      <Text style={styles.title}>Welcome, {username}!</Text>
+
+      {/* Calories Goal */}
       <View style={styles.row}>
         <Text style={styles.leftAlignText}>Calories Goal: {caloriesGoal}</Text>
         <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingCaloriesGoal(true)}>
@@ -171,6 +184,8 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Dietary Restrictions */}
       <View style={styles.row}>
         <Text style={styles.leftAlignText}>Dietary Restrictions: {dietaryRestrictions}</Text>
         <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingDietaryRestrictions(true)}>
@@ -193,6 +208,8 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Logout and Delete Account */}
       <TouchableOpacity onPress={handleLogout}>
         <Text style={{ color: 'red', marginTop: 20 }}>Logout</Text>
       </TouchableOpacity>
@@ -210,11 +227,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    alignItems: 'center', // Center content horizontally
   },
   backButton: {
     position: 'absolute',
     top: 10,
     left: 5,
+  },
+  profilePicture: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginTop: 40, // Add margin to position it below the back button
+    marginBottom: 20,
+  },
+  profilePicturePlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#ccc',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 20,
+  },
+  profilePicturePlaceholderText: {
+    color: '#fff',
+    fontSize: 16,
   },
   title: {
     fontSize: 24,

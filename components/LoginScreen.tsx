@@ -117,9 +117,7 @@ const LoginScreen = ({
       <View style={styles.buttonSpacing} />
       <Button title="Create Account" onPress={onNavigateToSignUp} />
       <View style={styles.buttonSpacing} /> {/* Add spacing between the buttons */}
-      <Button
-        title="Forgot username or password?"
-        onPress={onNavigateForgotPassword}
+      <Button title="Forgot username or password?" onPress={onNavigateForgotPassword}
       />
     </View>
   );

@@ -188,7 +188,14 @@ router.get('/user', authMiddleware, (req: Request, res: Response) => {
         return res.status(404).send('User not found');
       }
 
-      res.status(200).json(rows[0]);
+      const userData = rows[0];
+
+      // Convert the profile_picture BLOB to a Base64 string
+      if (userData.profile_picture) {
+        userData.profile_picture = `data:image/jpeg;base64,${userData.profile_picture.toString()}`;
+      }
+
+      res.status(200).json(userData);
     })
     .catch((err: Error) => {
       console.error('Error fetching user data:', err);
