@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
+import nodemailer from 'nodemailer';
 import authMiddleware from './authMiddleware';
 
 const router = Router();
@@ -20,6 +21,7 @@ router.get('/', (req: Request, res: Response) => {
   res.send('Welcome to the Meal API');
 });
 
+// Signup user
 router.post('/signup', upload.single('profile_picture'), (req: Request, res: Response) => {
   const { username, email, password, calories_goal, dietary_restrictions } = req.body;
   const profilePicture = req.file?.buffer;
@@ -79,34 +81,58 @@ router.post('/login', (req: Request, res: Response) => {
     });
 });
 
-const buildUpdateQuery = (fields: Record<string, any>) => {
-  const fieldsToUpdate = [];
-  const values = [];
-
-  for (const [key, value] of Object.entries(fields)) {
-    if (value !== undefined) {
-      fieldsToUpdate.push(`${key} = ?`);
-      values.push(value);
-    }
-  }
-
-  return { query: fieldsToUpdate.join(', '), values };
-};
-
-// Update user information (including calories_goal and dietary_restrictions) using username
-router.put('/user/:username', authMiddleware, async (req: Request, res: Response): Promise<void> => {
-  const { username } = req.params; // Extract the username from the route parameter
-  const { email, password, calories_goal, dietary_restrictions } = req.body; // Extract fields from the request body
-  const user = (req as any).user; // Authenticated user from the middleware
+// Forgot Password or username
+router.post('/forgot-password', (req: Request, res: Response) => {
+  const { email } = req.body;
   const db = (req as any).db;
 
-  // Ensure the authenticated user is updating their own data
+  (async () => {
+    try {
+      const [rows]: [User[], any] = await db.query('SELECT username, password FROM users WHERE email = ?', [email]);
+
+      if (rows.length === 0) {
+        return res.status(404).send('No user found with this email');
+      }
+
+      const user = rows[0];
+
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Your Account Information',
+        text: `Hello ${user.username},\n\nHere is your account information:\n\nUsername: ${user.username}\nPassword: ${user.password}\n\nIf you did not request this email, please ignore it.\n\nThank you!`,
+      };
+
+      await transporter.sendMail(mailOptions);
+
+      res.status(200).send('An email with your account information has been sent');
+    } catch (err) {
+      console.error('Error sending forgot password email:', err);
+      res.status(500).send('Error sending email');
+    }
+  })();
+});
+
+// Update user information
+router.put('/user/:username', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const { username } = req.params;
+  const { email, password, calories_goal, dietary_restrictions } = req.body;
+  const user = (req as any).user;
+  const db = (req as any).db;
+
   if (username !== user.username) {
     res.status(403).send('You are not authorized to update this user');
-    return Promise.resolve();
+    return;
   }
 
-  // Build the query dynamically
   const fields = { email, password, calories_goal, dietary_restrictions };
   const { query, values } = buildUpdateQuery(fields);
 
@@ -116,7 +142,6 @@ router.put('/user/:username', authMiddleware, async (req: Request, res: Response
   }
 
   try {
-    // Hash the password if it's being updated
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);
       const passwordIndex = Object.keys(fields).indexOf('password');
@@ -126,7 +151,7 @@ router.put('/user/:username', authMiddleware, async (req: Request, res: Response
     }
 
     const sql = `UPDATE users SET ${query} WHERE username = ?`;
-    values.push(username); // Use the username in the query
+    values.push(username);
 
     await db.query(sql, values);
     res.status(200).send('User updated successfully');
@@ -192,5 +217,19 @@ router.post('/upload-profile-picture', authMiddleware, upload.single('profile_pi
       res.status(500).send('Error uploading profile picture');
     });
 });
+
+const buildUpdateQuery = (fields: Record<string, any>) => {
+  const fieldsToUpdate = [];
+  const values = [];
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (value !== undefined) {
+      fieldsToUpdate.push(`${key} = ?`);
+      values.push(value);
+    }
+  }
+
+  return { query: fieldsToUpdate.join(', '), values };
+};
 
 export default router;
