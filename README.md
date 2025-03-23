@@ -19,5 +19,5 @@
    ```bash
     npx expo start
    ```
-username is user and password is password
+
 

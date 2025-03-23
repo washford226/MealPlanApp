@@ -1,26 +1,38 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
+interface DecodedToken {
+  id: number;
+  username: string;
+  iat?: number;
+  exp?: number;
+}
 
-  if (!token) {
-    res.status(401).send('Access denied. No token provided.');
+const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+  const authHeader = req.header('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).send('Access denied. Invalid token format.');
     return;
   }
+
+  const token = authHeader.replace('Bearer ', '');
 
   try {
     const secret: string | undefined = process.env.JWT_SECRET;
     if (!secret) {
-      res.status(500).send('JWT secret is not defined');
-      return;
+      throw new Error('JWT secret is not defined');
     }
 
-    const decoded = jwt.verify(token, secret);
-    (req as any).user = decoded;
+    const decoded = jwt.verify(token, secret) as DecodedToken;
+    (req as any).user = decoded; // Attach the decoded token to the request object
     next();
-  } catch (ex) {
-    res.status(400).send('Invalid token.');
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error('Error verifying token:', err.message);
+    } else {
+      console.error('Error verifying token:', err);
+    }
+    res.status(401).send('Invalid token.');
   }
 };
 
