@@ -39,7 +39,13 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout, onChangePasswor
         setUsername(response.data.username);
         setCaloriesGoal(response.data.calories_goal);
         setDietaryRestrictions(response.data.dietary_restrictions);
-        setProfilePicture(response.data.profile_picture); // Set profile picture
+
+        // Ensure the profile picture is a valid URL or Base64 string
+        if (response.data.profile_picture) {
+          setProfilePicture(`data:image/jpeg;base64,${response.data.profile_picture}`);
+        } else {
+          setProfilePicture(null);
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -226,8 +232,8 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    marginTop: 40, // Add margin to position it below the back button
-    marginBottom: 20,
+    marginTop: 40,
+    marginBottom: 10,
   },
   profilePicturePlaceholder: {
     width: 120,
@@ -237,7 +243,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 40,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   profilePicturePlaceholderText: {
     color: '#fff',

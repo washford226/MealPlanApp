@@ -64,7 +64,6 @@ function Index() {
         ) : isAccountScreen ? (
           <>
             <AccountScreen
-              onBackToCalendar={handleBackToCalendar}
               onLogout={() => setIsLoggedIn(false)}
               onChangePassword={handleChangePassword}
             />
