@@ -110,13 +110,13 @@ const LoginScreen = ({
           style={styles.showPasswordButton}
           onPress={() => setIsPasswordVisible(!isPasswordVisible)}
         >
-          <Text>{isPasswordVisible ? "Hide" : "Show"}</Text> {/* Wrap text in <Text> */}
+          <Text>{isPasswordVisible ? "Hide" : "Show"}</Text>
         </TouchableOpacity>
       </View>
       <Button title="Login" onPress={handleLogin} />
       <View style={styles.buttonSpacing} />
       <Button title="Create Account" onPress={onNavigateToSignUp} />
-      <View style={styles.buttonSpacing} /> {/* Add spacing between the buttons */}
+      <View style={styles.buttonSpacing} /> 
       <Button title="Forgot username or password?" onPress={onNavigateForgotPassword}
       />
     </View>
