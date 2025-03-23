@@ -15,20 +15,18 @@ const ForgotPasswordScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) 
       const response = await axios.post(`${getBaseUrl()}/forgot-password`, { email });
 
       if (response.status === 200) {
-        Alert.alert("Success", "An email with your username and password has been sent.");
+        Alert.alert("Success", "A password reset link has been sent to your email.");
         onBackToLogin(); // Use the onBackToLogin prop to navigate back
       }
     } catch (error) {
       console.error("Error sending forgot password email:", error);
-
-      // Ensure the error message is wrapped in a string
       Alert.alert("Error", "Failed to send email. Please try again.");
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Forgot Username or Password</Text>
+      <Text style={styles.title}>Forgot Password</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter your email"
@@ -37,7 +35,7 @@ const ForgotPasswordScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) 
         keyboardType="email-address"
       />
       <View style={styles.buttonSpacing} />
-      <Button title="Send Email" onPress={handleForgotPassword} />
+      <Button title="Send Reset Link" onPress={handleForgotPassword} />
       <View style={styles.buttonSpacing} />
       <Button title="Back to Login" onPress={onBackToLogin} />
     </View>

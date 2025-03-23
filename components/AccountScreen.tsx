@@ -2,10 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, TextInput, StyleSheet, Platform, Image } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Icon from 'react-native-vector-icons/Ionicons';
 
 interface AccountScreenProps {
-  onBackToCalendar: () => void;
   onLogout: () => void;
   onChangePassword: () => void;
 }
@@ -13,7 +11,7 @@ interface AccountScreenProps {
 // Dynamically set the base URL based on the platform
 const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000';
 
-const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogout, onChangePassword }) => {
+const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout, onChangePassword }) => {
   const [username, setUsername] = useState<string>('');
   const [caloriesGoal, setCaloriesGoal] = useState<number | null>(null);
   const [isEditingCaloriesGoal, setIsEditingCaloriesGoal] = useState<boolean>(false);
@@ -144,11 +142,6 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBackToCalendar, onLogou
 
   return (
     <View style={styles.container}>
-      {/* Back button to navigate back to the calendar */}
-      <TouchableOpacity style={styles.backButton} onPress={onBackToCalendar}>
-        <Icon name="arrow-back" size={24} color="#000" />
-      </TouchableOpacity>
-
       {/* Profile Picture */}
       {profilePicture ? (
         <Image source={{ uri: profilePicture }} style={styles.profilePicture} />
@@ -228,11 +221,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     alignItems: 'center', // Center content horizontally
-  },
-  backButton: {
-    position: 'absolute',
-    top: 10,
-    left: 5,
   },
   profilePicture: {
     width: 120,

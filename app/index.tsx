@@ -8,7 +8,7 @@ import ChangePasswordScreen from "@/components/ChangePasswordScreen";
 import ForgotPasswordScreen from "@/components/ForgotPasswordScreen"; // Import the ForgotPasswordScreen
 import Icon from "react-native-vector-icons/FontAwesome";
 
-export default function Index() {
+function Index() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [isAccountScreen, setIsAccountScreen] = useState(false);
@@ -62,20 +62,57 @@ export default function Index() {
         isChangePasswordScreen ? (
           <ChangePasswordScreen onBackToAccount={handleBackToAccount} />
         ) : isAccountScreen ? (
-          <AccountScreen
-            onBackToCalendar={handleBackToCalendar}
-            onLogout={() => setIsLoggedIn(false)}
-            onChangePassword={handleChangePassword}
-          />
+          <>
+            <AccountScreen
+              onBackToCalendar={handleBackToCalendar}
+              onLogout={() => setIsLoggedIn(false)}
+              onChangePassword={handleChangePassword}
+            />
+            {/* Bottom Navigation Bar */}
+            <View style={styles.bottomBar}>
+              <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>
+                <Icon name="calendar" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Calendar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.barButton}>
+                <Icon name="plus" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Middle</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.barButton}>
+                <Icon name="plus" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Middle</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToAccount}>
+                <Icon name="user" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Account</Text>
+              </TouchableOpacity>
+            </View>
+          </>
         ) : (
           <>
             <View style={styles.header}>
               <Text style={styles.title}>My Calendar</Text>
-              <TouchableOpacity onPress={handleNavigateToAccount}>
-                <Icon name="user" size={30} color="#000" />
-              </TouchableOpacity>
             </View>
             <MealPlanCalendar />
+            {/* Bottom Navigation Bar */}
+            <View style={styles.bottomBar}>
+              <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>
+                <Icon name="calendar" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Calendar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.barButton}>
+                <Icon name="plus" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Middle</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.barButton}>
+                <Icon name="plus" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Middle</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToAccount}>
+                <Icon name="user" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Account</Text>
+              </TouchableOpacity>
+            </View>
           </>
         )
       ) : isSigningUp ? (
@@ -102,7 +139,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center", // Center the title horizontally
     alignItems: "center",
     width: "100%",
     paddingHorizontal: 20,
@@ -111,4 +148,27 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
   },
+  bottomBar: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    width: "100%",
+    height: 60,
+    backgroundColor: "#f8f8f8",
+    borderTopWidth: 1,
+    borderTopColor: "#ccc",
+    position: "absolute",
+    bottom: 0,
+  },
+  barButton: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  barButtonText: {
+    fontSize: 12,
+    marginTop: 4,
+  },
 });
+
+export default Index;
