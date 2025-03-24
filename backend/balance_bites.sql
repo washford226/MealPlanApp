@@ -2,7 +2,7 @@
 CREATE DATABASE IF NOT EXISTS balance_bites;
 
 -- Use the database
-USE balance_bytes;
+USE balance_bites;
 
 -- Create the users table
 CREATE TABLE IF NOT EXISTS users (
