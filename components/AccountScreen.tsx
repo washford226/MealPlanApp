@@ -5,13 +5,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AccountScreenProps {
   onLogout: () => void;
-  onChangePassword: () => void;
 }
 
 // Dynamically set the base URL based on the platform
 const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000';
 
-const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout, onChangePassword }) => {
+const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
   const [username, setUsername] = useState<string>('');
   const [caloriesGoal, setCaloriesGoal] = useState<number | null>(null);
   const [isEditingCaloriesGoal, setIsEditingCaloriesGoal] = useState<boolean>(false);
@@ -211,9 +210,6 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout, onChangePasswor
       {/* Logout and Delete Account */}
       <TouchableOpacity onPress={handleLogout}>
         <Text style={{ color: 'red', marginTop: 20 }}>Logout</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={onChangePassword}>
-        <Text style={{ color: 'green', marginTop: 20 }}>Change Password</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={handleDeleteAccount}>
         <Text style={{ color: 'purple', marginTop: 20 }}>Delete Account</Text>
