@@ -1,8 +1,8 @@
 -- Create the database
-CREATE DATABASE IF NOT EXISTS balance_bites;
+CREATE DATABASE IF NOT EXISTS balance_bytes;
 
 -- Use the database
-USE balance_bites;
+USE balance_bytes;
 
 -- Create the users table
 CREATE TABLE IF NOT EXISTS users (
