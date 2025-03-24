@@ -12,12 +12,10 @@ Install the required dependencies for both the backend and frontend.
 
 ```bash
 # Install backend dependencies
-cd backend
 npm install
 npm install express @types/express bcrypt jsonwebtoken mysql2 dotenv multer nodemailer
 
 # Install frontend dependencies
-cd ../frontend
 npm install
 npm install react-native react-native-vector-icons axios @react-native-async-storage/async-storage react-navigation react-navigation-stack react-navigation-tabs
 ```
