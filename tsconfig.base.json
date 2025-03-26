@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true, // Enable this flag to fix the import issue
+    "skipLibCheck": true,    // Optional: Skips type checking of declaration files
+    "jsx": "react",          // Add this line to enable JSX support
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
+}

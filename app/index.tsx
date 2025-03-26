@@ -5,13 +5,15 @@ import LoginScreen from "@/components/LoginScreen";
 import SignUpScreen from "@/components/SignUpScreen";
 import AccountScreen from "@/components/AccountScreen";
 import ForgotPasswordScreen from "@/components/ForgotPasswordScreen"; // Import the ForgotPasswordScreen
+import OtherMeals from "@/components/OtherMeals"; // Import the OtherMeals screen
 import Icon from "react-native-vector-icons/FontAwesome";
 
 function Index() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [isAccountScreen, setIsAccountScreen] = useState(false);
-  const [isForgotPasswordScreen, setIsForgotPasswordScreen] = useState(false); // Add state for forgot password screen
+  const [isForgotPasswordScreen, setIsForgotPasswordScreen] = useState(false);
+  const [isOtherMealsScreen, setIsOtherMealsScreen] = useState(false); // Add state for OtherMeals screen
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -27,7 +29,7 @@ function Index() {
 
   const handleNavigateToLogin = () => {
     setIsSigningUp(false);
-    setIsForgotPasswordScreen(false); // Ensure we navigate back to login
+    setIsForgotPasswordScreen(false);
   };
 
   const handleNavigateToAccount = () => {
@@ -36,14 +38,19 @@ function Index() {
 
   const handleBackToCalendar = () => {
     setIsAccountScreen(false);
+    setIsOtherMealsScreen(false); // Ensure we navigate back to the calendar
   };
 
   const handleNavigateToForgotPassword = () => {
-    setIsForgotPasswordScreen(true); // Navigate to ForgotPasswordScreen
+    setIsForgotPasswordScreen(true);
   };
 
   const handleBackToLogin = () => {
-    setIsForgotPasswordScreen(false); // Navigate back to LoginScreen
+    setIsForgotPasswordScreen(false);
+  };
+
+  const handleNavigateToOtherMeals = () => {
+    setIsOtherMealsScreen(true); // Navigate to OtherMeals screen
   };
 
   return (
@@ -51,9 +58,7 @@ function Index() {
       {isLoggedIn ? (
         isAccountScreen ? (
           <>
-            <AccountScreen
-              onLogout={() => setIsLoggedIn(false)}
-            />
+            <AccountScreen onLogout={() => setIsLoggedIn(false)} />
             {/* Bottom Navigation Bar */}
             <View style={styles.bottomBar}>
               <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>
@@ -64,9 +69,32 @@ function Index() {
                 <Icon name="plus" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Middle</Text>
               </TouchableOpacity>
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
+                <Icon name="cutlery" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Other Meals</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToAccount}>
+                <Icon name="user" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Account</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : isOtherMealsScreen ? (
+          <>
+            <OtherMeals />
+            {/* Bottom Navigation Bar */}
+            <View style={styles.bottomBar}>
+              <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>
+                <Icon name="calendar" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Calendar</Text>
+              </TouchableOpacity>
               <TouchableOpacity style={styles.barButton}>
                 <Icon name="plus" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Middle</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
+                <Icon name="cutlery" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Other Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToAccount}>
                 <Icon name="user" size={24} color="#000" />
@@ -90,9 +118,9 @@ function Index() {
                 <Icon name="plus" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Middle</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.barButton}>
-                <Icon name="plus" size={24} color="#000" />
-                <Text style={styles.barButtonText}>Middle</Text>
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
+                <Icon name="cutlery" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Other Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToAccount}>
                 <Icon name="user" size={24} color="#000" />
@@ -109,7 +137,7 @@ function Index() {
         <LoginScreen
           onLogin={handleLogin}
           onNavigateToSignUp={handleNavigateToSignUp}
-          onNavigateForgotPassword={handleNavigateToForgotPassword} // Pass navigation to ForgotPasswordScreen
+          onNavigateForgotPassword={handleNavigateToForgotPassword}
         />
       )}
     </View>
@@ -125,7 +153,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    justifyContent: "center", // Center the title horizontally
+    justifyContent: "center",
     alignItems: "center",
     width: "100%",
     paddingHorizontal: 20,

@@ -239,4 +239,27 @@ const buildUpdateQuery = (fields: Record<string, any>) => {
   return { query: fieldsToUpdate.join(', '), values };
 };
 
+// Get meals for all users except the current user
+router.get('/meals/other-users', authMiddleware, (req: Request, res: Response) => {
+  const user = (req as any).user; // Current logged-in user
+  const db = (req as any).db;
+
+  const query = `
+    SELECT meals.id, meals.name, meals.description, meals.created_at, users.username AS userName
+    FROM meals
+    INNER JOIN users ON meals.user_id = users.id
+    WHERE meals.user_id != ?
+    ORDER BY meals.created_at DESC
+  `;
+
+  db.query(query, [user.id])
+    .then(([rows]: [any[], any]) => {
+      res.status(200).json(rows);
+    })
+    .catch((err: Error) => {
+      console.error('Error fetching meals for other users:', err);
+      res.status(500).send('Error fetching meals for other users');
+    });
+});
+
 export default router;
