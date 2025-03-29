@@ -1,4 +1,13 @@
 import { Router, Request, Response } from 'express';
+
+// Extend the Request interface to include the user property
+declare global {
+  namespace Express {
+    interface Request {
+      user?: { id: number; username: string };
+    }
+  }
+}
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
@@ -182,7 +191,7 @@ router.get('/user', authMiddleware, (req: Request, res: Response) => {
   const user = (req as any).user;
   const db = (req as any).db;
 
-  db.query('SELECT username, calories_goal, dietary_restrictions, profile_picture FROM users WHERE id = ?', [user.id])
+  db.query('SELECT id, username, calories_goal, dietary_restrictions, profile_picture FROM users WHERE id = ?', [user.id])
     .then(([rows]: [User[], any]) => {
       if (rows.length === 0) {
         return res.status(404).send('User not found');
@@ -239,26 +248,72 @@ const buildUpdateQuery = (fields: Record<string, any>) => {
   return { query: fieldsToUpdate.join(', '), values };
 };
 
-// Get meals for all users except the current user
-router.get('/meals/other-users', authMiddleware, (req: Request, res: Response) => {
-  const user = (req as any).user; // Current logged-in user
+// Get all meals
+router.get('/meals', authMiddleware, (req: Request, res: Response) => {
   const db = (req as any).db;
 
   const query = `
-    SELECT meals.id, meals.name, meals.description, meals.created_at, users.username AS userName
+    SELECT 
+      meals.id, 
+      meals.name, 
+      meals.description, 
+      meals.ingredients, 
+      meals.calories, 
+      meals.protein, 
+      meals.carbohydrates, 
+      meals.fat, 
+      meals.created_at, 
+      users.username AS userName
     FROM meals
     INNER JOIN users ON meals.user_id = users.id
-    WHERE meals.user_id != ?
     ORDER BY meals.created_at DESC
   `;
 
-  db.query(query, [user.id])
+  db.query(query)
     .then(([rows]: [any[], any]) => {
       res.status(200).json(rows);
     })
     .catch((err: Error) => {
-      console.error('Error fetching meals for other users:', err);
-      res.status(500).send('Error fetching meals for other users');
+      console.error('Error fetching all meals:', err);
+      res.status(500).send('Error fetching all meals');
+    });
+});
+
+router.post('/reviews', authMiddleware, (req: Request, res: Response) => {
+  const { meal_id, rating, comment } = req.body;
+  const user_id = req.user?.id ?? (() => { throw new Error('User is not authenticated'); })(); // Ensure user is defined
+  const db = (req as any).db; // Retrieve the db instance from the request object
+
+  const query = `
+    INSERT INTO Reviews (meal_id, user_id, rating, comment)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  db.query(query, [meal_id, user_id, rating, comment])
+    .then(() => res.status(201).send('Review created successfully'))
+    .catch((err: Error) => {
+      console.error('Error creating review:', err);
+      res.status(500).send('Error creating review');
+    });
+});
+
+router.get('/reviews', authMiddleware, (req: Request, res: Response) => {
+  const { meal_id } = req.query;
+  const db = (req as any).db; // Retrieve the db instance from the request object
+
+  const query = `
+    SELECT r.review_id AS id, r.rating, r.comment, r.created_at, u.username AS userName
+    FROM Reviews r
+    INNER JOIN users u ON r.user_id = u.id
+    WHERE r.meal_id = ?
+    ORDER BY r.created_at DESC
+  `;
+
+  db.query(query, [meal_id])
+    .then(([rows]: [any[], any]) => res.status(200).json(rows))
+    .catch((err: Error) => {
+      console.error('Error fetching reviews:', err);
+      res.status(500).send('Error fetching reviews');
     });
 });
 

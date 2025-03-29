@@ -1,38 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { useCurrentUser } from '../hooks/useCurrentUser'; // Ensure this file exists or adjust the path
-import axios from 'axios'; // Using axios for API calls
+import React, { useEffect, useState } from "react";
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Platform } from "react-native";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Meal } from "@/types/types";
 
-const OtherMeals: React.FC = () => {
-  const [meals, setMeals] = useState<{ id: number; name: string; userName: string }[]>([]);
+interface OtherMealsProps {
+  onMealSelect: (meal: Meal) => void;
+}
+
+const BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
+
+const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
+  const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
-  const currentUser = useCurrentUser(); // Get the current user's info
 
   useEffect(() => {
     const fetchMeals = async () => {
       try {
-        const token = currentUser?.token; // Safely access the token property
-        const response = await axios.get('/meals/other-users', {
+        const token = await AsyncStorage.getItem("token");
+        const response = await axios.get(`${BASE_URL}/meals`, {
           headers: {
-            Authorization: `Bearer ${token}`, // Pass the token for authentication
+            Authorization: `Bearer ${token}`,
           },
         });
-        setMeals(response.data); // Set the fetched meals
+        setMeals(response.data);
       } catch (error) {
-        console.error('Error fetching meals:', error);
+        console.error("Error fetching meals:", error);
+        Alert.alert("Error", "Failed to fetch meals. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
 
-    if (currentUser) {
-      fetchMeals();
-    }
-  }, [currentUser]);
+    fetchMeals();
+  }, []);
 
   if (loading) {
     return (
       <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0000ff" />
         <Text>Loading meals...</Text>
       </View>
     );
@@ -41,51 +47,58 @@ const OtherMeals: React.FC = () => {
   if (meals.length === 0) {
     return (
       <View style={styles.container}>
-        <Text>No meals found for other users.</Text>
+        <Text>No meals available.</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Meals from Other Users</Text>
-      <FlatList
-        data={meals}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.mealItem}>
+    <FlatList
+      data={meals}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={({ item }) => (
+        <View style={styles.mealItem}>
+          <TouchableOpacity onPress={() => onMealSelect(item)}>
             <Text style={styles.mealName}>{item.name}</Text>
-            <Text style={styles.mealDetails}>By: {item.userName}</Text>
-          </View>
-        )}
-      />
-    </View>
+            <Text style={styles.mealDescription}>{item.description}</Text>
+            <Text style={styles.mealUser}>By: {item.userName}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      contentContainerStyle={styles.listContent}
+    />
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
-  header: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
+  listContent: {
+    padding: 16,
   },
   mealItem: {
+    marginBottom: 16,
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    backgroundColor: "#f9f9f9",
   },
   mealName: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: "bold",
   },
-  mealDetails: {
+  mealDescription: {
     fontSize: 14,
-    color: '#555',
+    color: "#555",
+  },
+  mealUser: {
+    fontSize: 12,
+    color: "#888",
   },
 });
 
