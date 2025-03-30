@@ -1,7 +1,11 @@
+// filepath: c:\School\Spring 2025\Capstone\MealPlanApp\tsconfig.json
 {
-  "extends": "expo/tsconfig.base",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "jsx": "react", // Add this line to enable JSX support
     "paths": {
       "@/*": [
         "./*"

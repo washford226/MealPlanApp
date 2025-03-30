@@ -75,3 +75,16 @@ CREATE TABLE Portions (
     serving_size VARCHAR(255),  -- E.g., 1 cup, 1 slice
     FOREIGN KEY (food_id) REFERENCES Foods(food_id) ON DELETE CASCADE
 );
+
+-- Create the reviews table
+CREATE TABLE Reviews (
+    review_id INT PRIMARY KEY AUTO_INCREMENT, -- Unique identifier for each review
+    meal_id CHAR(36) NOT NULL, -- Foreign key to the meals table
+    user_id INT NOT NULL, -- Foreign key to the users table
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5), -- Rating between 1 and 5
+    comment TEXT DEFAULT NULL, -- Optional comment for the review
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp for when the review was created
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Timestamp for updates
+    FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE, -- Cascade delete if the meal is deleted
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE -- Cascade delete if the user is deleted
+);
