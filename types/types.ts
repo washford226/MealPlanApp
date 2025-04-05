@@ -8,4 +8,5 @@ export interface Meal {
     fat: number;
     userName: string;
     ingredients: string;
+    averageRating: number;
   }

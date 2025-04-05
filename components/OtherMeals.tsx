@@ -62,6 +62,9 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
             <Text style={styles.mealName}>{item.name}</Text>
             <Text style={styles.mealDescription}>{item.description}</Text>
             <Text style={styles.mealUser}>By: {item.userName}</Text>
+            <Text style={styles.mealRating}>
+              Rating: {Math.round(Number(item.averageRating))} / 5
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -99,6 +102,11 @@ const styles = StyleSheet.create({
   mealUser: {
     fontSize: 12,
     color: "#888",
+  },
+  mealRating: {
+    fontSize: 14,
+    color: "#333",
+    marginTop: 8,
   },
 });
 
