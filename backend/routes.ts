@@ -251,8 +251,9 @@ const buildUpdateQuery = (fields: Record<string, any>) => {
 // Get all meals
 router.get('/meals', authMiddleware, (req: Request, res: Response) => {
   const db = (req as any).db;
+  const { search } = req.query; // Get the search query parameter
 
-  const query = `
+  let query = `
     SELECT 
       meals.id, 
       meals.name, 
@@ -269,11 +270,29 @@ router.get('/meals', authMiddleware, (req: Request, res: Response) => {
     INNER JOIN users ON meals.user_id = users.id
     LEFT JOIN reviews ON meals.id = reviews.meal_id -- Join with the reviews table
     WHERE meals.visibility = TRUE
+  `;
+
+  const values: any[] = [];
+
+  // Add search filtering if the search query is provided
+  if (search) {
+    query += `
+      AND (
+        meals.name LIKE ? OR
+        meals.description LIKE ? OR
+        users.username LIKE ?
+      )
+    `;
+    const searchTerm = `%${search}%`;
+    values.push(searchTerm, searchTerm, searchTerm);
+  }
+
+  query += `
     GROUP BY meals.id, users.username -- Group by meal ID and username
     ORDER BY meals.created_at DESC
   `;
 
-  db.query(query)
+  db.query(query, values)
     .then(([rows]: [any[], any]) => {
       res.status(200).json(rows);
     })
