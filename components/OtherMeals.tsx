@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, 
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Meal } from "@/types/types";
+import StarRating from "react-native-star-rating-widget"; // Import the star rating widget
 
 interface OtherMealsProps {
   onMealSelect: (meal: Meal) => void;
@@ -62,9 +63,15 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
             <Text style={styles.mealName}>{item.name}</Text>
             <Text style={styles.mealDescription}>{item.description}</Text>
             <Text style={styles.mealUser}>By: {item.userName}</Text>
-            <Text style={styles.mealRating}>
-              Rating: {Math.round(Number(item.averageRating))} / 5
-            </Text>
+            {/* Star Rating Display */}
+            <StarRating
+              rating={Math.round(Math.min(Math.max(Number(item.averageRating || 0), 0), 5))} // Clamp the value between 0 and 5
+              maxStars={5}
+              starSize={20}
+              color="#FFD700" // Gold color for stars
+              enableSwiping={false} // Disable interaction
+              onChange={() => {}} // No-op function to satisfy the required prop
+            />
           </TouchableOpacity>
         </View>
       )}
@@ -102,11 +109,6 @@ const styles = StyleSheet.create({
   mealUser: {
     fontSize: 12,
     color: "#888",
-  },
-  mealRating: {
-    fontSize: 14,
-    color: "#333",
-    marginTop: 8,
   },
 });
 

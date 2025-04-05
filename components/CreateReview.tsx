@@ -4,6 +4,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "reac
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Meal } from "@/types/types";
+import StarRating from "react-native-star-rating-widget"; // Import the star rating widget
 
 interface CreateReviewProps {
   meal: Meal; // The meal for which the review is being created
@@ -14,13 +15,13 @@ interface CreateReviewProps {
 const BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
 
 const CreateReview: React.FC<CreateReviewProps> = ({ meal, onReviewSubmit, onCancel }) => {
-  const [rating, setRating] = useState<string>(""); // Rating input
+  const [rating, setRating] = useState<number>(0); // Star rating input
   const [comment, setComment] = useState<string>(""); // Comment input
   const [loading, setLoading] = useState(false); // Loading state
 
   const handleSubmit = async () => {
-    if (!rating || isNaN(Number(rating)) || Number(rating) < 1 || Number(rating) > 5) {
-      Alert.alert("Invalid Rating", "Please enter a rating between 1 and 5.");
+    if (rating < 1 || rating > 5) {
+      Alert.alert("Invalid Rating", "Please select a rating between 1 and 5 stars.");
       return;
     }
 
@@ -32,7 +33,7 @@ const CreateReview: React.FC<CreateReviewProps> = ({ meal, onReviewSubmit, onCan
         `${BASE_URL}/reviews`,
         {
           meal_id: meal.id,
-          rating: Number(rating),
+          rating, // Use the selected star rating
           comment,
         },
         {
@@ -55,13 +56,17 @@ const CreateReview: React.FC<CreateReviewProps> = ({ meal, onReviewSubmit, onCan
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create Review for {meal.name}</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter a rating (1-5)"
-        keyboardType="numeric"
-        value={rating}
-        onChangeText={setRating}
+
+      {/* Star Rating Component */}
+      <StarRating
+        rating={rating}
+        onChange={setRating}
+        maxStars={5}
+        starSize={30}
+        color="#FFD700" // Gold color for stars
       />
+
+      {/* Comment Input */}
       <TextInput
         style={[styles.input, styles.commentInput]}
         placeholder="Enter a comment (optional)"
@@ -69,6 +74,8 @@ const CreateReview: React.FC<CreateReviewProps> = ({ meal, onReviewSubmit, onCan
         value={comment}
         onChangeText={setComment}
       />
+
+      {/* Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
           <Text style={styles.submitButtonText}>{loading ? "Submitting..." : "Submit Review"}</Text>
