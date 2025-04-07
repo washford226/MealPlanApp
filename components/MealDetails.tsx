@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 import { Meal } from "@/types/types"; // Import the shared Meal interface
 
 interface MealDetailsProps {
@@ -9,7 +10,49 @@ interface MealDetailsProps {
   onViewReviews: (meal: Meal) => void; // Callback for navigating to the ViewReviews screen
 }
 
+const BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
+
 const MealDetails: React.FC<MealDetailsProps> = ({ meal, onBack, onAddReview, onViewReviews }) => {
+  const onAddMeal = async (meal: Meal) => {
+    try {
+      // Retrieve the token from AsyncStorage
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Error", "User not authenticated. Please log in.");
+        return;
+      }
+
+      // Make the POST request to add the meal
+      const response = await fetch(`${BASE_URL}/add-meal`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Use the token from AsyncStorage
+        },
+        body: JSON.stringify({
+          name: meal.name,
+          description: meal.description,
+          ingredients: meal.ingredients,
+          calories: meal.calories,
+          protein: meal.protein,
+          carbohydrates: meal.carbohydrates,
+          fat: meal.fat,
+        }),
+      });
+
+      if (response.ok) {
+        Alert.alert("Success", "Meal added successfully!");
+      } else {
+        const error = await response.text();
+        console.error("Error response:", error);
+        Alert.alert("Error", `Failed to add meal: ${error}`);
+      }
+    } catch (err) {
+      console.error("Error adding meal:", err);
+      Alert.alert("Error", "An error occurred while adding the meal.");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{meal.name}</Text>
@@ -31,6 +74,11 @@ const MealDetails: React.FC<MealDetailsProps> = ({ meal, onBack, onAddReview, on
       {/* View Reviews Button */}
       <TouchableOpacity style={styles.viewReviewsButton} onPress={() => onViewReviews(meal)}>
         <Text style={styles.viewReviewsButtonText}>View Reviews</Text>
+      </TouchableOpacity>
+
+      {/* Add Meal Button */}
+      <TouchableOpacity style={styles.addMealButton} onPress={() => onAddMeal(meal)}>
+        <Text style={styles.addMealButtonText}>Add Meal</Text>
       </TouchableOpacity>
 
       {/* Back Button */}
@@ -99,6 +147,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   viewReviewsButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  addMealButton: {
+    padding: 12,
+    backgroundColor: "#ffc107",
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  addMealButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",

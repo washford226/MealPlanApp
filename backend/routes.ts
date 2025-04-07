@@ -251,8 +251,9 @@ const buildUpdateQuery = (fields: Record<string, any>) => {
 // Get all meals
 router.get('/meals', authMiddleware, (req: Request, res: Response) => {
   const db = (req as any).db;
+  const { search } = req.query; // Get the search query parameter
 
-  const query = `
+  let query = `
     SELECT 
       meals.id, 
       meals.name, 
@@ -263,19 +264,41 @@ router.get('/meals', authMiddleware, (req: Request, res: Response) => {
       meals.carbohydrates, 
       meals.fat, 
       meals.created_at, 
-      users.username AS userName
+      users.username AS userName,
+      COALESCE(AVG(reviews.rating), 0) AS averageRating -- Calculate the average rating
     FROM meals
     INNER JOIN users ON meals.user_id = users.id
+    LEFT JOIN reviews ON meals.id = reviews.meal_id -- Join with the reviews table
+    WHERE meals.visibility = TRUE
+  `;
+
+  const values: any[] = [];
+
+  // Add search filtering if the search query is provided
+  if (search) {
+    query += `
+      AND (
+        meals.name LIKE ? OR
+        meals.description LIKE ? OR
+        users.username LIKE ?
+      )
+    `;
+    const searchTerm = `%${search}%`;
+    values.push(searchTerm, searchTerm, searchTerm);
+  }
+
+  query += `
+    GROUP BY meals.id, users.username -- Group by meal ID and username
     ORDER BY meals.created_at DESC
   `;
 
-  db.query(query)
+  db.query(query, values)
     .then(([rows]: [any[], any]) => {
       res.status(200).json(rows);
     })
     .catch((err: Error) => {
-      console.error('Error fetching all meals:', err);
-      res.status(500).send('Error fetching all meals');
+      console.error('Error fetching meals:', err);
+      res.status(500).send('Error fetching meals');
     });
 });
 
@@ -297,6 +320,7 @@ router.post('/reviews', authMiddleware, (req: Request, res: Response) => {
     });
 });
 
+// Get reviews for a meal
 router.get('/reviews', authMiddleware, (req: Request, res: Response) => {
   const { meal_id } = req.query;
   const db = (req as any).db; // Retrieve the db instance from the request object
@@ -314,6 +338,32 @@ router.get('/reviews', authMiddleware, (req: Request, res: Response) => {
     .catch((err: Error) => {
       console.error('Error fetching reviews:', err);
       res.status(500).send('Error fetching reviews');
+    });
+});
+
+//Copy meal
+router.post('/add-meal', authMiddleware, (req: Request, res: Response) => {
+  const user = (req as any).user; // Get the authenticated user
+  const db = (req as any).db; // Get the database instance
+  const { name, description, ingredients, calories, protein, carbohydrates, fat, visibility } = req.body;
+
+  if (!user) {
+    res.status(401).send('User not authenticated');
+    return;
+  }
+
+  const query = `
+    INSERT INTO meals (name, description, ingredients, calories, protein, carbohydrates, fat, visibility, user_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(query, [name, description, ingredients, calories, protein, carbohydrates, fat, visibility ?? false, user.id])
+    .then(() => {
+      res.status(201).send('Meal added successfully');
+    })
+    .catch((err: Error) => {
+      console.error('Error adding meal:', err);
+      res.status(500).send('Error adding meal');
     });
 });
 
