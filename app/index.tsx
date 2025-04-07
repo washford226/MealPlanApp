@@ -8,7 +8,9 @@ import ForgotPasswordScreen from "@/components/ForgotPasswordScreen";
 import OtherMeals from "@/components/OtherMeals";
 import MealDetails from "@/components/MealDetails";
 import CreateReview from "@/components/CreateReview";
-import ViewReviews from "@/components/ViewReviews"; // Import ViewReviews
+import ViewReviews from "@/components/ViewReviews";
+import MyMeals from "@/components/MyMeals";
+import MyMealInfo from "@/components/MyMealInfo";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { Meal } from "@/types/types";
 
@@ -18,69 +20,66 @@ function Index() {
   const [isAccountScreen, setIsAccountScreen] = useState(false);
   const [isForgotPasswordScreen, setIsForgotPasswordScreen] = useState(false);
   const [isOtherMealsScreen, setIsOtherMealsScreen] = useState(false);
+  const [isMyMealsScreen, setIsMyMealsScreen] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [isCreatingReview, setIsCreatingReview] = useState(false);
-  const [isViewingReviews, setIsViewingReviews] = useState(false); // New state for viewing reviews
+  const [isViewingReviews, setIsViewingReviews] = useState(false);
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
+  const handleLogin = () => setIsLoggedIn(true);
 
-  const handleNavigateToSignUp = () => {
-    setIsSigningUp(true);
-  };
+  const handleNavigateToSignUp = () => setIsSigningUp(true);
 
-  const handleSignUp = () => {
-    setIsSigningUp(false);
-  };
+  const handleSignUp = () => setIsSigningUp(false);
 
   const handleNavigateToLogin = () => {
     setIsSigningUp(false);
     setIsForgotPasswordScreen(false);
   };
 
-  const handleNavigateToAccount = () => {
-    setIsAccountScreen(true);
-  };
+  const handleNavigateToAccount = () => setIsAccountScreen(true);
 
   const handleBackToCalendar = () => {
     setIsAccountScreen(false);
     setIsOtherMealsScreen(false);
+    setIsMyMealsScreen(false);
     setSelectedMeal(null);
   };
 
-  const handleNavigateToForgotPassword = () => {
-    setIsForgotPasswordScreen(true);
-  };
+  const handleNavigateToForgotPassword = () => setIsForgotPasswordScreen(true);
 
-  const handleBackToLogin = () => {
-    setIsForgotPasswordScreen(false);
-  };
+  const handleBackToLogin = () => setIsForgotPasswordScreen(false);
 
   const handleNavigateToOtherMeals = () => {
     setIsAccountScreen(false);
     setIsOtherMealsScreen(true);
+    setIsMyMealsScreen(false);
     setSelectedMeal(null);
   };
 
-  const handleNavigateToMealDetails = (meal: Meal): void => {
-    setSelectedMeal(meal);
+  const handleNavigateToMyMeals = () => {
+    setIsAccountScreen(false);
+    setIsOtherMealsScreen(false);
+    setIsMyMealsScreen(true);
+    setSelectedMeal(null);
   };
+
+  const handleNavigateToMealDetails = (meal: Meal): void => setSelectedMeal(meal);
+
+  const handleNavigateToMyMealInfo = (meal: Meal): void => setSelectedMeal(meal);
 
   const handleAddReview = (meal: Meal): void => {
     setSelectedMeal(meal);
-    setIsCreatingReview(true); // Navigate to CreateReview screen
+    setIsCreatingReview(true);
   };
 
   const handleViewReviews = (meal: Meal): void => {
     setSelectedMeal(meal);
-    setIsViewingReviews(true); // Navigate to ViewReviews screen
+    setIsViewingReviews(true);
   };
 
   const handleReviewSubmit = () => {
     setIsCreatingReview(false);
     setSelectedMeal(null);
-    // Optionally refresh the meals list or show a success message
   };
 
   return (
@@ -95,15 +94,22 @@ function Index() {
         ) : isViewingReviews && selectedMeal ? (
           <ViewReviews
             meal={selectedMeal}
-            onBack={() => setIsViewingReviews(false)} // Navigate back to MealDetails
+            onBack={() => setIsViewingReviews(false)}
           />
         ) : selectedMeal ? (
-          <MealDetails
-            meal={selectedMeal}
-            onBack={() => setSelectedMeal(null)}
-            onAddReview={handleAddReview} // Pass the Add Review handler
-            onViewReviews={handleViewReviews} // Pass the View Reviews handler
-          />
+          isOtherMealsScreen ? (
+            <MealDetails
+              meal={selectedMeal}
+              onBack={() => setSelectedMeal(null)}
+              onAddReview={handleAddReview}
+              onViewReviews={handleViewReviews}
+            />
+          ) : (
+            <MyMealInfo
+              meal={selectedMeal}
+              onBack={() => setSelectedMeal(null)}
+            />
+          )
         ) : isAccountScreen ? (
           <>
             <AccountScreen onLogout={() => setIsLoggedIn(false)} />
@@ -112,9 +118,9 @@ function Index() {
                 <Icon name="calendar" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Calendar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.barButton}>
-                <Icon name="plus" size={24} color="#000" />
-                <Text style={styles.barButtonText}>Middle</Text>
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToMyMeals}>
+                <Icon name="cutlery" size={24} color="#000" />
+                <Text style={styles.barButtonText}>My Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
@@ -128,17 +134,37 @@ function Index() {
           </>
         ) : isOtherMealsScreen ? (
           <>
-            <OtherMeals
-              onMealSelect={handleNavigateToMealDetails}
-            />
+            <OtherMeals onMealSelect={handleNavigateToMealDetails} />
             <View style={styles.bottomBar}>
               <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>
                 <Icon name="calendar" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Calendar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.barButton}>
-                <Icon name="plus" size={24} color="#000" />
-                <Text style={styles.barButtonText}>Middle</Text>
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToMyMeals}>
+                <Icon name="cutlery" size={24} color="#000" />
+                <Text style={styles.barButtonText}>My Meals</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
+                <Icon name="cutlery" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Other Meals</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToAccount}>
+                <Icon name="user" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Account</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : isMyMealsScreen ? (
+          <>
+            <MyMeals onMealSelect={handleNavigateToMyMealInfo} />
+            <View style={styles.bottomBar}>
+              <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>
+                <Icon name="calendar" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Calendar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToMyMeals}>
+                <Icon name="cutlery" size={24} color="#000" />
+                <Text style={styles.barButtonText}>My Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
@@ -151,19 +177,16 @@ function Index() {
             </View>
           </>
         ) : (
-          <>
-            <View style={styles.header}>
-              <Text style={styles.title}>My Calendar</Text>
-            </View>
+          <View style={styles.calendarContainer}>
             <MealPlanCalendar />
             <View style={styles.bottomBar}>
               <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>
                 <Icon name="calendar" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Calendar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.barButton}>
-                <Icon name="plus" size={24} color="#000" />
-                <Text style={styles.barButtonText}>Middle</Text>
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToMyMeals}>
+                <Icon name="cutlery" size={24} color="#000" />
+                <Text style={styles.barButtonText}>My Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
@@ -174,7 +197,7 @@ function Index() {
                 <Text style={styles.barButtonText}>Account</Text>
               </TouchableOpacity>
             </View>
-          </>
+          </View>
         )
       ) : isSigningUp ? (
         <SignUpScreen onSignUp={handleSignUp} onNavigateToLogin={handleNavigateToLogin} />
@@ -197,6 +220,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingTop: 25,
+  },
+  calendarContainer: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "stretch",
   },
   header: {
     flexDirection: "row",

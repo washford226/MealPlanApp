@@ -302,6 +302,59 @@ router.get('/meals', authMiddleware, (req: Request, res: Response) => {
     });
 });
 
+// Get meals for the current user (without reviews)
+router.get('/my-meals', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const user = (req as any).user; // Get the authenticated user
+  const db = (req as any).db; // Get the database instance
+  const { search } = req.query; // Get the search query parameter
+
+  if (!user) {
+    res.status(401).send('User not authenticated');
+    return;
+  }
+
+  let query = `
+    SELECT 
+      meals.id, 
+      meals.name, 
+      meals.description, 
+      meals.ingredients, 
+      meals.calories, 
+      meals.protein, 
+      meals.carbohydrates, 
+      meals.fat, 
+      meals.created_at
+    FROM meals
+    WHERE meals.user_id = ? -- Filter by the current user's ID
+  `;
+
+  const values: any[] = [user.id];
+
+  // Add search filtering if the search query is provided
+  if (search) {
+    query += `
+      AND (
+        meals.name LIKE ? OR
+        meals.description LIKE ?
+      )
+    `;
+    const searchTerm = `%${search}%`;
+    values.push(searchTerm, searchTerm);
+  }
+
+  query += `
+    ORDER BY meals.created_at DESC
+  `;
+
+  try {
+    const [rows]: [any[], any] = await db.query(query, values);
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error('Error fetching user meals:', err);
+    res.status(500).send('Error fetching user meals');
+  }
+});
+
 router.post('/reviews', authMiddleware, (req: Request, res: Response) => {
   const { meal_id, rating, comment } = req.body;
   const user_id = req.user?.id ?? (() => { throw new Error('User is not authenticated'); })(); // Ensure user is defined
@@ -364,6 +417,166 @@ router.post('/add-meal', authMiddleware, (req: Request, res: Response) => {
     .catch((err: Error) => {
       console.error('Error adding meal:', err);
       res.status(500).send('Error adding meal');
+    });
+});
+
+// Add a meal to the meal plan
+router.post('/meal-plan', authMiddleware, (req: Request, res: Response): void => {
+  const { meal_id, date, meal_type } = req.body; // Extract data from the request body
+  const db = (req as any).db; // Get the database instance
+
+  // Validate the input
+  if (!meal_id || !date || !meal_type) {
+    res.status(400).send('Meal ID, date, and meal type are required');
+    return;
+  }
+
+  // Ensure the meal_type is valid
+  const validMealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Other'];
+  if (!validMealTypes.includes(meal_type)) {
+    res.status(400).send(`Invalid meal type. Valid types are: ${validMealTypes.join(', ')}`);
+    return;
+  }
+
+  const query = `
+    INSERT INTO Meal_Plan (meal_id, date, meal_type)
+    VALUES (?, ?, ?)
+  `;
+
+  db.query(query, [meal_id, date, meal_type])
+    .then(() => {
+      res.status(201).send('Meal added to the meal plan successfully');
+    })
+    .catch((err: Error) => {
+      console.error('Error adding meal to the meal plan:', err);
+      res.status(500).send('Error adding meal to the meal plan');
+    });
+});
+
+router.get('/meal-plan', authMiddleware, (req: Request, res: Response): void => {
+  const { date } = req.query; // Extract the date from the query parameters
+  const db = (req as any).db; // Get the database instance
+
+  if (!date) {
+    res.status(400).send('Date is required');
+    return;
+  }
+
+  const query = `
+    SELECT mp.meal_plan_id, mp.date, mp.meal_type, m.name, m.description, m.calories, m.protein, m.carbohydrates, m.fat
+    FROM Meal_Plan mp
+    INNER JOIN meals m ON mp.meal_id = m.id
+    WHERE mp.date = ?
+    ORDER BY FIELD(mp.meal_type, 'Breakfast', 'Lunch', 'Dinner', 'Other')
+  `;
+
+  db.query(query, [date])
+    .then(([rows]: [any[], any]) => {
+      res.status(200).json(rows);
+    })
+    .catch((err: Error) => {
+      console.error('Error fetching meals for the date:', err);
+      res.status(500).send('Error fetching meals for the date');
+    });
+});
+
+router.get('/meal-plan-range', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const { startDate, endDate } = req.query; // Extract the date range from the query parameters
+  const db = (req as any).db; // Get the database instance
+
+  if (!startDate || !endDate) {
+    res.status(400).send('Start date and end date are required');
+    return;
+  }
+
+  const query = `
+    SELECT mp.meal_plan_id, mp.date, mp.meal_type, m.name, m.description, m.calories, m.protein, m.carbohydrates, m.fat
+    FROM Meal_Plan mp
+    INNER JOIN meals m ON mp.meal_id = m.id
+    WHERE mp.date BETWEEN ? AND ?
+    ORDER BY mp.date ASC, FIELD(mp.meal_type, 'Breakfast', 'Lunch', 'Dinner', 'Other')
+  `;
+
+  try {
+    const [rows]: [any[], any] = await db.query(query, [startDate, endDate]);
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error('Error fetching meals for the date range:', err);
+    res.status(500).send('Error fetching meals for the date range');
+  }
+});
+
+router.put('/meal-plan/:meal_plan_id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const { meal_plan_id } = req.params; // Extract the meal_plan_id from the URL
+  const { date, meal_type } = req.body; // Extract the updated fields from the request body
+  const db = (req as any).db; // Get the database instance
+
+  if (!date || !meal_type) {
+    res.status(400).send('Date and meal type are required');
+    return;
+  }
+
+  const validMealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Other'];
+  if (!validMealTypes.includes(meal_type)) {
+    res.status(400).send(`Invalid meal type. Valid types are: ${validMealTypes.join(', ')}`);
+    return;
+  }
+
+  const query = `
+    UPDATE Meal_Plan
+    SET date = ?, meal_type = ?
+    WHERE meal_plan_id = ?
+  `;
+
+  try {
+    await db.query(query, [date, meal_type, meal_plan_id]);
+    res.status(200).send('Meal plan updated successfully');
+  } catch (err) {
+    console.error('Error updating meal plan:', err);
+    res.status(500).send('Error updating meal plan');
+  }
+});
+
+router.delete('/meal-plan/:meal_plan_id', authMiddleware, (req: Request, res: Response) => {
+  const { meal_plan_id } = req.params; // Extract the meal_plan_id from the URL
+  const db = (req as any).db; // Get the database instance
+
+  const query = `
+    DELETE FROM Meal_Plan
+    WHERE meal_plan_id = ?
+  `;
+
+  db.query(query, [meal_plan_id])
+    .then(() => {
+      res.status(200).send('Meal removed from the meal plan successfully');
+    })
+    .catch((err: Error) => {
+      console.error('Error removing meal from the meal plan:', err);
+      res.status(500).send('Error removing meal from the meal plan');
+    });
+});
+
+router.delete('/meal-plan-clear', authMiddleware, (req: Request, res: Response) => {
+  const { date } = req.body; // Extract the date from the request body
+  const db = (req as any).db; // Get the database instance
+
+  if (!date) {
+    res.status(400).send('Date is required');
+    return;
+  }
+
+  const query = `
+    DELETE FROM Meal_Plan
+    WHERE date = ?
+  `;
+
+  db.query(query, [date])
+    .then(() => {
+      res.status(200).send('Meal plan cleared for the date');
+    })
+    .catch((err: Error) => {
+      console.error('Error clearing meal plan:', err);
+      res.status(500).send('Error clearing meal plan');
     });
 });
 
