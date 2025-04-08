@@ -381,6 +381,44 @@ router.post('/add-meal', authMiddleware, (req: Request, res: Response) => {
     });
 });
 
+// Define the foodData object with nutritional information
+const foodData: Record<string, any> = {
+  apple: {
+    calories: 52,
+    protein: 0.3,
+    carbohydrates: 14,
+    fat: 0.2,
+  },
+  banana: {
+    calories: 96,
+    protein: 1.3,
+    carbohydrates: 27,
+    fat: 0.3,
+  },
+  chicken: {
+    calories: 239,
+    protein: 27,
+    carbohydrates: 0,
+    fat: 14,
+  },
+  // Add more foods as needed
+};
+
+// API Endpoint to retrieve nutritional information for foods via query parameters
+router.get('/v1/foods', (req: Request, res: Response): void => {
+  const foodName = req.query.food?.toString().toLowerCase();
+
+  if (foodName && foodData[foodName]) {
+    res.status(200).json({
+      food: foodName,
+      nutrition: foodData[foodName],
+    });
+  } else {
+    res.status(404).json({
+      error: 'Food not found. Please provide a valid food name.',
+    });
+  }
+
 export default router;
 
 
