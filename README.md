@@ -70,9 +70,9 @@ Navigate to the `frontend` directory and start the app:
 ```bash
 npx expo start
 ```
-Run on an Android emulator for best experience. 
-If running on web, errors may not properly display and stop the server. 
-So you must be the perfect user on web.
+Run on an Android emulator for the best experience. 
+If running on the web, please note that errors may not display properly and could cause the server to stop unexpectedly. 
+Exercise caution and ensure all inputs and actions are correct when using the web version.
 ---
 
 ### **Dependencies**
