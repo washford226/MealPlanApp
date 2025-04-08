@@ -1,9 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Platform, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  TextInput,
+} from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Meal } from "@/types/types";
 import StarRating from "react-native-star-rating-widget"; // Import the star rating widget
+import { useTheme } from "@/context/ThemeContext"; // Import ThemeContext
 
 interface OtherMealsProps {
   onMealSelect: (meal: Meal) => void;
@@ -16,6 +27,8 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
   const [filteredMeals, setFilteredMeals] = useState<Meal[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>(""); // State for search query
   const [loading, setLoading] = useState(true);
+
+  const { theme } = useTheme(); // Access the theme from ThemeContext
 
   useEffect(() => {
     const fetchMeals = async () => {
@@ -49,10 +62,11 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
       setFilteredMeals(meals); // Show all meals if the search query is empty
     } else {
       const lowercasedQuery = searchQuery.toLowerCase();
-      const filtered = meals.filter((meal) =>
-        meal.name.toLowerCase().includes(lowercasedQuery) ||
-        meal.description.toLowerCase().includes(lowercasedQuery) ||
-        meal.userName.toLowerCase().includes(lowercasedQuery)
+      const filtered = meals.filter(
+        (meal) =>
+          meal.name.toLowerCase().includes(lowercasedQuery) ||
+          meal.description.toLowerCase().includes(lowercasedQuery) ||
+          meal.userName.toLowerCase().includes(lowercasedQuery)
       );
       setFilteredMeals(filtered);
     }
@@ -60,27 +74,28 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Loading meals...</Text>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.text} />
+        <Text style={[styles.loadingText, { color: theme.text }]}>Loading meals...</Text>
       </View>
     );
   }
 
   if (filteredMeals.length === 0) {
     return (
-      <View style={styles.container}>
-        <Text>No meals match your search.</Text>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <Text style={[styles.noMealsText, { color: theme.text }]}>No meals match your search.</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Search Bar */}
       <TextInput
-        style={styles.searchBar}
+        style={[styles.searchBar, { borderColor: theme.text, color: theme.text }]}
         placeholder="Search meals..."
+        placeholderTextColor={theme.text}
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
@@ -90,11 +105,11 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
         data={filteredMeals}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={styles.mealItem}>
+          <View style={[styles.mealItem, { backgroundColor: theme.button }]}>
             <TouchableOpacity onPress={() => onMealSelect(item)}>
-              <Text style={styles.mealName}>{item.name}</Text>
-              <Text style={styles.mealDescription}>{item.description}</Text>
-              <Text style={styles.mealUser}>By: {item.userName}</Text>
+              <Text style={[styles.mealName, { color: theme.buttonText }]}>{item.name}</Text>
+              <Text style={[styles.mealDescription, { color: theme.buttonText }]}>{item.description}</Text>
+              <Text style={[styles.mealUser, { color: theme.buttonText }]}>By: {item.userName}</Text>
               <StarRating
                 rating={Math.round(Math.min(Math.max(Number(item.averageRating || 0), 0), 5))}
                 maxStars={5}
@@ -115,11 +130,9 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   searchBar: {
     height: 40,
-    borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 8,
@@ -133,9 +146,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 8,
-    backgroundColor: "#f9f9f9",
   },
   mealName: {
     fontSize: 18,
@@ -143,11 +154,17 @@ const styles = StyleSheet.create({
   },
   mealDescription: {
     fontSize: 14,
-    color: "#555",
   },
   mealUser: {
     fontSize: 12,
-    color: "#888",
+  },
+  loadingText: {
+    fontSize: 16,
+    marginTop: 8,
+  },
+  noMealsText: {
+    fontSize: 16,
+    marginTop: 8,
   },
 });
 

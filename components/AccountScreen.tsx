@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, TextInput, StyleSheet, Platform, Image } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '@/context/ThemeContext'; // Import the ThemeContext
 
 interface AccountScreenProps {
   onLogout: () => void;
@@ -19,6 +20,8 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
   const [isEditingDietaryRestrictions, setIsEditingDietaryRestrictions] = useState<boolean>(false);
   const [newDietaryRestrictions, setNewDietaryRestrictions] = useState<string>('');
   const [profilePicture, setProfilePicture] = useState<string | null>(null); // State for profile picture
+
+  const { theme, toggleTheme } = useTheme(); // Access theme and toggleTheme from ThemeContext
 
   // Fetch user data when the component mounts
   useEffect(() => {
@@ -96,7 +99,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
       }
 
       const response = await axios.put(
-        `${BASE_URL}/user/${username}`, // Use the dynamic /user/:id endpoint
+        `${BASE_URL}/user/${username}`,
         { calories_goal: newCaloriesGoal },
         {
           headers: {
@@ -125,7 +128,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
       }
 
       const response = await axios.put(
-        `${BASE_URL}/user/${username}`, // Use the dynamic /user/:id endpoint
+        `${BASE_URL}/user/${username}`,
         { dietary_restrictions: newDietaryRestrictions },
         {
           headers: {
@@ -146,36 +149,37 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Profile Picture */}
       {profilePicture ? (
         <Image source={{ uri: profilePicture }} style={styles.profilePicture} />
       ) : (
-        <View style={styles.profilePicturePlaceholder}>
-          <Text style={styles.profilePicturePlaceholderText}>No Picture</Text>
+        <View style={[styles.profilePicturePlaceholder, { backgroundColor: theme.button }]}>
+          <Text style={[styles.profilePicturePlaceholderText, { color: theme.text }]}>No Picture</Text>
         </View>
       )}
 
-      <Text style={styles.title}>Welcome, {username}!</Text>
+      <Text style={[styles.title, { color: theme.text }]}>Welcome, {username}!</Text>
 
       {/* Calories Goal */}
       <View style={styles.row}>
-        <Text style={styles.leftAlignText}>Calories Goal: {caloriesGoal}</Text>
-        <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingCaloriesGoal(true)}>
-          <Text style={styles.editButtonText}>Edit</Text>
+        <Text style={[styles.leftAlignText, { color: theme.text }]}>Calories Goal: {caloriesGoal}</Text>
+        <TouchableOpacity style={[styles.editButton, { backgroundColor: theme.button }]} onPress={() => setIsEditingCaloriesGoal(true)}>
+          <Text style={[styles.editButtonText, { color: theme.buttonText }]}>Edit</Text>
         </TouchableOpacity>
       </View>
       {isEditingCaloriesGoal && (
         <View>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { borderColor: theme.text, color: theme.text }]}
             placeholder="Enter new calories goal"
+            placeholderTextColor={theme.text}
             value={newCaloriesGoal}
             onChangeText={setNewCaloriesGoal}
             keyboardType="numeric"
           />
           <TouchableOpacity onPress={handleEditCaloriesGoal}>
-            <Text style={{ color: 'blue', marginTop: 10 }}>Save</Text>
+            <Text style={{ color: theme.button, marginTop: 10 }}>Save</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setIsEditingCaloriesGoal(false)}>
             <Text style={{ color: 'red', marginTop: 10 }}>Cancel</Text>
@@ -185,21 +189,22 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
 
       {/* Dietary Restrictions */}
       <View style={styles.row}>
-        <Text style={styles.leftAlignText}>Dietary Restrictions: {dietaryRestrictions}</Text>
-        <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingDietaryRestrictions(true)}>
-          <Text style={styles.editButtonText}>Edit</Text>
+        <Text style={[styles.leftAlignText, { color: theme.text }]}>Dietary Restrictions: {dietaryRestrictions}</Text>
+        <TouchableOpacity style={[styles.editButton, { backgroundColor: theme.button }]} onPress={() => setIsEditingDietaryRestrictions(true)}>
+          <Text style={[styles.editButtonText, { color: theme.buttonText }]}>Edit</Text>
         </TouchableOpacity>
       </View>
       {isEditingDietaryRestrictions && (
         <View>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { borderColor: theme.text, color: theme.text }]}
             placeholder="Enter new dietary restrictions"
+            placeholderTextColor={theme.text}
             value={newDietaryRestrictions}
             onChangeText={setNewDietaryRestrictions}
           />
           <TouchableOpacity onPress={handleEditDietaryRestrictions}>
-            <Text style={{ color: 'blue', marginTop: 10 }}>Save</Text>
+            <Text style={{ color: theme.button, marginTop: 10 }}>Save</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setIsEditingDietaryRestrictions(false)}>
             <Text style={{ color: 'red', marginTop: 10 }}>Cancel</Text>
@@ -213,6 +218,16 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
       </TouchableOpacity>
       <TouchableOpacity onPress={handleDeleteAccount}>
         <Text style={{ color: 'purple', marginTop: 20 }}>Delete Account</Text>
+      </TouchableOpacity>
+
+      {/* Theme Toggle Button */}
+      <TouchableOpacity
+        style={[styles.themeButton, { backgroundColor: theme.button }]}
+        onPress={toggleTheme}
+      >
+        <Text style={[styles.themeButtonText, { color: theme.buttonText }]}>
+          Toggle {theme.background === '#000000' ? 'Light' : 'Dark'} Mode
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -235,14 +250,12 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#ccc',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 40,
     marginBottom: 10,
   },
   profilePicturePlaceholderText: {
-    color: '#fff',
     fontSize: 16,
   },
   title: {
@@ -262,18 +275,26 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   editButton: {
-    backgroundColor: '#007bff',
     padding: 5,
     borderRadius: 5,
   },
   editButtonText: {
-    color: '#fff',
+    fontWeight: 'bold',
   },
   input: {
     borderWidth: 1,
-    borderColor: 'gray',
     padding: 5,
     marginVertical: 10,
+  },
+  themeButton: {
+    marginTop: 20,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  themeButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
