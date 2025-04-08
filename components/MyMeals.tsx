@@ -13,6 +13,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Meal } from "@/types/types";
+import { useTheme } from "@/context/ThemeContext"; // Import the ThemeContext
 
 interface MyMealsProps {
   onMealSelect: (meal: Meal) => void; // Callback for selecting a meal
@@ -25,6 +26,8 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
   const [filteredMeals, setFilteredMeals] = useState<Meal[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+
+  const { theme } = useTheme(); // Access the current theme
 
   useEffect(() => {
     const fetchMyMeals = async () => {
@@ -64,26 +67,27 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Loading your meals...</Text>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.text} />
+        <Text style={[styles.loadingText, { color: theme.text }]}>Loading your meals...</Text>
       </View>
     );
   }
 
   if (meals.length === 0) {
     return (
-      <View style={styles.container}>
-        <Text>No meals found.</Text>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <Text style={[styles.noMealsText, { color: theme.text }]}>No meals found.</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <TextInput
-        style={styles.searchBar}
+        style={[styles.searchBar, { borderColor: theme.text, color: theme.text }]}
         placeholder="Search meals..."
+        placeholderTextColor={theme.text}
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
@@ -92,11 +96,11 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.mealItem}
+            style={[styles.mealItem, { backgroundColor: theme.background, borderColor: theme.text }]}
             onPress={() => onMealSelect(item)} // Call the onMealSelect callback
           >
-            <Text style={styles.mealName}>{item.name}</Text>
-            <Text style={styles.mealDescription}>{item.description}</Text>
+            <Text style={[styles.mealName, { color: theme.text }]}>{item.name}</Text>
+            <Text style={[styles.mealDescription, { color: theme.text }]}>{item.description}</Text>
           </TouchableOpacity>
         )}
       />
@@ -108,11 +112,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: "#fff",
   },
   searchBar: {
     height: 40,
-    borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
@@ -122,9 +124,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 8,
-    backgroundColor: "#f9f9f9",
   },
   mealName: {
     fontSize: 18,
@@ -132,7 +132,15 @@ const styles = StyleSheet.create({
   },
   mealDescription: {
     fontSize: 14,
-    color: "#555",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    textAlign: "center",
+  },
+  noMealsText: {
+    fontSize: 16,
+    textAlign: "center",
   },
 });
 
