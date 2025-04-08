@@ -68,7 +68,7 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.text} />
+        <ActivityIndicator size="large" color={theme.primary} />
         <Text style={[styles.loadingText, { color: theme.text }]}>Loading your meals...</Text>
       </View>
     );
@@ -85,9 +85,9 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <TextInput
-        style={[styles.searchBar, { borderColor: theme.text, color: theme.text }]}
+        style={[styles.searchBar, { borderColor: theme.border, color: theme.text }]}
         placeholder="Search meals..."
-        placeholderTextColor={theme.text}
+        placeholderTextColor={theme.placeholder}
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
@@ -96,11 +96,11 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={[styles.mealItem, { backgroundColor: theme.background, borderColor: theme.text }]}
+            style={[styles.mealItem, { backgroundColor: theme.card, borderColor: theme.border }]}
             onPress={() => onMealSelect(item)} // Call the onMealSelect callback
           >
             <Text style={[styles.mealName, { color: theme.text }]}>{item.name}</Text>
-            <Text style={[styles.mealDescription, { color: theme.text }]}>{item.description}</Text>
+            <Text style={[styles.mealDescription, { color: theme.subtext }]}>{item.description}</Text>
           </TouchableOpacity>
         )}
       />

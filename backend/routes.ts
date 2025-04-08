@@ -468,6 +468,78 @@ router.get('/my-meals', authMiddleware, async (req: Request, res: Response): Pro
   }
 });
 
+// Edit a meal
+router.put('/meals/:meal_id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const { meal_id } = req.params; // Extract the meal ID from the URL
+  const { name, description, ingredients, calories, protein, carbohydrates, fat, visibility } = req.body; // Extract updated fields from the request body
+  const user = (req as any).user; // Get the authenticated user
+  const db = (req as any).db; // Get the database instance
+
+  if (!user) {
+    res.status(401).send('User not authenticated');
+    return;
+  }
+
+  // Validate input
+  if (!name || !description || !ingredients || calories === undefined || protein === undefined || carbohydrates === undefined || fat === undefined) {
+    res.status(400).send('All fields are required');
+    return;
+  }
+
+  try {
+    // Check if the meal exists and belongs to the authenticated user
+    const [rows]: [any[], any] = await db.query('SELECT * FROM meals WHERE id = ? AND user_id = ?', [meal_id, user.id]);
+    if (rows.length === 0) {
+      res.status(404).send('Meal not found or you are not authorized to edit this meal');
+      return;
+    }
+
+    // Update the meal
+    const query = `
+      UPDATE meals
+      SET name = ?, description = ?, ingredients = ?, calories = ?, protein = ?, carbohydrates = ?, fat = ?, visibility = ?
+      WHERE id = ? AND user_id = ?
+    `;
+    const values = [name, description, ingredients, calories, protein, carbohydrates, fat, visibility ?? false, meal_id, user.id];
+
+    await db.query(query, values);
+    res.status(200).send('Meal updated successfully');
+  } catch (err) {
+    console.error('Error updating meal:', err);
+    res.status(500).send('Error updating meal');
+  }
+});
+
+// Delete a meal
+router.delete('/meals/:meal_id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const { meal_id } = req.params; // Extract the meal ID from the URL
+  const user = (req as any).user; // Get the authenticated user
+  const db = (req as any).db; // Get the database instance
+
+  if (!user) {
+    res.status(401).send('User not authenticated');
+    return;
+  }
+
+  try {
+    // Check if the meal exists and belongs to the authenticated user
+    const [rows]: [any[], any] = await db.query('SELECT * FROM meals WHERE id = ? AND user_id = ?', [meal_id, user.id]);
+    if (rows.length === 0) {
+      res.status(404).send('Meal not found or you are not authorized to delete this meal');
+      return;
+    }
+
+    // Delete the meal
+    const query = 'DELETE FROM meals WHERE id = ? AND user_id = ?';
+    await db.query(query, [meal_id, user.id]);
+
+    res.status(200).send('Meal deleted successfully');
+  } catch (err) {
+    console.error('Error deleting meal:', err);
+    res.status(500).send('Error deleting meal');
+  }
+});
+
 // Add a meal to the meal plan
 router.post('/meal-plan', authMiddleware, (req: Request, res: Response): void => {
   const { meal_id, date, meal_type } = req.body; // Extract data from the request body
