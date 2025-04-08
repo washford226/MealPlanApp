@@ -90,13 +90,71 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
     }
   };
 
+  // Handle editing calories goal
+  const handleEditCaloriesGoal = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const response = await axios.put(
+        `${BASE_URL}/user/${username}`,
+        { calories_goal: newCaloriesGoal },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setCaloriesGoal(parseInt(newCaloriesGoal, 10));
+        setIsEditingCaloriesGoal(false);
+        Alert.alert('Success', 'Calories goal updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating calories goal:', error);
+      Alert.alert('Error', 'Failed to update calories goal');
+    }
+  };
+
+  // Handle editing dietary restrictions
+  const handleEditDietaryRestrictions = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const response = await axios.put(
+        `${BASE_URL}/user/${username}`,
+        { dietary_restrictions: newDietaryRestrictions },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setDietaryRestrictions(newDietaryRestrictions);
+        setIsEditingDietaryRestrictions(false);
+        Alert.alert('Success', 'Dietary restrictions updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating dietary restrictions:', error);
+      Alert.alert('Error', 'Failed to update dietary restrictions');
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Profile Picture */}
       {profilePicture ? (
         <Image source={{ uri: profilePicture }} style={styles.profilePicture} />
       ) : (
-        <View style={styles.profilePicturePlaceholder}>
+        <View style={[styles.profilePicturePlaceholder, { backgroundColor: theme.button }]}>
           <Text style={[styles.profilePicturePlaceholderText, { color: theme.text }]}>No Picture</Text>
         </View>
       )}
@@ -106,25 +164,53 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
       {/* Calories Goal */}
       <View style={styles.row}>
         <Text style={[styles.leftAlignText, { color: theme.text }]}>Calories Goal: {caloriesGoal}</Text>
-        <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingCaloriesGoal(true)}>
-          <Text style={styles.editButtonText}>Edit</Text>
+        <TouchableOpacity style={[styles.editButton, { backgroundColor: theme.button }]} onPress={() => setIsEditingCaloriesGoal(true)}>
+          <Text style={[styles.editButtonText, { color: theme.buttonText }]}>Edit</Text>
         </TouchableOpacity>
       </View>
+      {isEditingCaloriesGoal && (
+        <View>
+          <TextInput
+            style={[styles.input, { borderColor: theme.text, color: theme.text }]}
+            placeholder="Enter new calories goal"
+            placeholderTextColor={theme.text}
+            value={newCaloriesGoal}
+            onChangeText={setNewCaloriesGoal}
+            keyboardType="numeric"
+          />
+          <TouchableOpacity onPress={handleEditCaloriesGoal}>
+            <Text style={{ color: theme.button, marginTop: 10 }}>Save</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setIsEditingCaloriesGoal(false)}>
+            <Text style={{ color: 'red', marginTop: 10 }}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Dietary Restrictions */}
       <View style={styles.row}>
         <Text style={[styles.leftAlignText, { color: theme.text }]}>Dietary Restrictions: {dietaryRestrictions}</Text>
-        <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingDietaryRestrictions(true)}>
-          <Text style={styles.editButtonText}>Edit</Text>
+        <TouchableOpacity style={[styles.editButton, { backgroundColor: theme.button }]} onPress={() => setIsEditingDietaryRestrictions(true)}>
+          <Text style={[styles.editButtonText, { color: theme.buttonText }]}>Edit</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Theme Toggle Button */}
-      <TouchableOpacity style={styles.themeButton} onPress={toggleTheme}>
-        <Text style={[styles.themeButtonText, { color: theme.buttonText }]}>
-          Toggle {theme.background === '#000000' ? 'Light' : 'Dark'} Mode
-        </Text>
-      </TouchableOpacity>
+      {isEditingDietaryRestrictions && (
+        <View>
+          <TextInput
+            style={[styles.input, { borderColor: theme.text, color: theme.text }]}
+            placeholder="Enter new dietary restrictions"
+            placeholderTextColor={theme.text}
+            value={newDietaryRestrictions}
+            onChangeText={setNewDietaryRestrictions}
+          />
+          <TouchableOpacity onPress={handleEditDietaryRestrictions}>
+            <Text style={{ color: theme.button, marginTop: 10 }}>Save</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setIsEditingDietaryRestrictions(false)}>
+            <Text style={{ color: 'red', marginTop: 10 }}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Logout and Delete Account */}
       <TouchableOpacity onPress={handleLogout}>
@@ -132,6 +218,16 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
       </TouchableOpacity>
       <TouchableOpacity onPress={handleDeleteAccount}>
         <Text style={{ color: 'purple', marginTop: 20 }}>Delete Account</Text>
+      </TouchableOpacity>
+
+      {/* Theme Toggle Button */}
+      <TouchableOpacity
+        style={[styles.themeButton, { backgroundColor: theme.button }]}
+        onPress={toggleTheme}
+      >
+        <Text style={[styles.themeButtonText, { color: theme.buttonText }]}>
+          Toggle {theme.background === '#000000' ? 'Light' : 'Dark'} Mode
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -154,7 +250,6 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#ccc',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 40,
@@ -180,18 +275,22 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   editButton: {
-    backgroundColor: '#007bff',
     padding: 5,
     borderRadius: 5,
   },
   editButtonText: {
-    color: '#fff',
+    fontWeight: 'bold',
+  },
+  input: {
+    borderWidth: 1,
+    padding: 5,
+    marginVertical: 10,
   },
   themeButton: {
     marginTop: 20,
     padding: 10,
-    backgroundColor: '#007bff',
     borderRadius: 5,
+    alignItems: 'center',
   },
   themeButtonText: {
     fontSize: 16,
