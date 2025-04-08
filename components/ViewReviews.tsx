@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Platform } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  Platform,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Meal } from "@/types/types";
+import { useTheme } from "@/context/ThemeContext"; // Import ThemeContext
 
 interface Review {
   id: string;
@@ -22,6 +32,8 @@ const BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://lo
 const ViewReviews: React.FC<ViewReviewsProps> = ({ meal, onBack }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const { theme } = useTheme(); // Access the theme from ThemeContext
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -52,42 +64,54 @@ const ViewReviews: React.FC<ViewReviewsProps> = ({ meal, onBack }) => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Loading reviews...</Text>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.text} />
+        <Text style={[styles.loadingText, { color: theme.text }]}>Loading reviews...</Text>
       </View>
     );
   }
 
   if (reviews.length === 0) {
     return (
-      <View style={styles.container}>
-        <Text>No reviews available for this meal.</Text>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backButtonText}>Back</Text>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <Text style={[styles.noReviewsText, { color: theme.text }]}>
+          No reviews available for this meal.
+        </Text>
+        <TouchableOpacity
+          style={[styles.backButton, { backgroundColor: theme.button }]}
+          onPress={onBack}
+        >
+          <Text style={[styles.backButtonText, { color: theme.buttonText }]}>Back</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Reviews for {meal.name}</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.text }]}>Reviews for {meal.name}</Text>
       <FlatList
         data={reviews}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.reviewItem}>
-            <Text style={styles.userName}>{item.userName}</Text>
-            <Text style={styles.rating}>Rating: {item.rating}/5</Text>
-            <Text style={styles.comment}>{item.comment}</Text>
-            <Text style={styles.date}>Reviewed on: {new Date(item.created_at).toLocaleDateString()}</Text>
+          <View style={[styles.reviewItem, { backgroundColor: theme.button }]}>
+            <Text style={[styles.userName, { color: theme.buttonText }]}>{item.userName}</Text>
+            <Text style={[styles.rating, { color: theme.buttonText }]}>
+              Rating: {item.rating}/5
+            </Text>
+            <Text style={[styles.comment, { color: theme.buttonText }]}>{item.comment}</Text>
+            <Text style={[styles.date, { color: theme.buttonText }]}>
+              Reviewed on: {new Date(item.created_at).toLocaleDateString()}
+            </Text>
           </View>
         )}
         contentContainerStyle={styles.listContent}
       />
-      <TouchableOpacity style={styles.backButton} onPress={onBack}>
-        <Text style={styles.backButtonText}>Back</Text>
+      <TouchableOpacity
+        style={[styles.backButton, { backgroundColor: theme.button }]}
+        onPress={onBack}
+      >
+        <Text style={[styles.backButtonText, { color: theme.buttonText }]}>Back</Text>
       </TouchableOpacity>
     </View>
   );
@@ -97,7 +121,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: "#fff",
   },
   title: {
     fontSize: 20,
@@ -111,9 +134,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 8,
-    backgroundColor: "#f9f9f9",
   },
   userName: {
     fontSize: 16,
@@ -122,27 +143,30 @@ const styles = StyleSheet.create({
   },
   rating: {
     fontSize: 14,
-    color: "#555",
     marginBottom: 4,
   },
   comment: {
     fontSize: 14,
-    color: "#555",
     marginBottom: 4,
   },
   date: {
     fontSize: 12,
-    color: "#888",
+  },
+  loadingText: {
+    fontSize: 16,
+    marginTop: 8,
+  },
+  noReviewsText: {
+    fontSize: 16,
+    marginTop: 8,
   },
   backButton: {
     marginTop: 16,
     padding: 12,
-    backgroundColor: "#007BFF",
     borderRadius: 8,
     alignItems: "center",
   },
   backButtonText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
   },
