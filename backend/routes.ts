@@ -31,10 +31,21 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 // Signup user
-router.post('/signup', upload.single('profile_picture'), (req: Request, res: Response) => {
+router.post('/signup', upload.single('profile_picture'), async (req: Request, res: Response): Promise<void> => {
   const { username, email, password, calories_goal, dietary_restrictions } = req.body;
   const profilePicture = req.file?.buffer;
   const db = (req as any).db;
+
+  // Validate file type
+  if (req.file && !['image/jpeg', 'image/png'].includes(req.file.mimetype)) {
+    res.status(400).send({ message: 'Invalid file type. Only JPEG and PNG are allowed.' });
+  }
+
+  // Validate file size
+  if (req.file && req.file.size > 5 * 1024 * 1024) { // 5 MB limit
+    res.status(400).send({ message: 'File size exceeds the limit of 5 MB.' });
+    return;
+  }
 
   db.query('SELECT * FROM users WHERE username = ? OR email = ?', [username, email])
     .then(async ([rows]: [User[], any]) => {
@@ -44,7 +55,7 @@ router.post('/signup', upload.single('profile_picture'), (req: Request, res: Res
 
       return bcrypt.hash(password, 10);
     })
-    .then((hashedPassword: string) => {
+    .then(async (hashedPassword: string) => {
       const query = 'INSERT INTO users (username, email, password, calories_goal, dietary_restrictions, profile_picture) VALUES (?, ?, ?, ?, ?, ?)';
       return db.query(query, [username, email, hashedPassword, calories_goal, dietary_restrictions, profilePicture]);
     })
@@ -201,7 +212,10 @@ router.get('/user', authMiddleware, (req: Request, res: Response) => {
 
       // Convert the profile_picture BLOB to a Base64 string
       if (userData.profile_picture) {
-        userData.profile_picture = `data:image/jpeg;base64,${userData.profile_picture.toString()}`;
+        const buffer = Buffer.isBuffer(userData.profile_picture)
+            ? userData.profile_picture
+            : Buffer.from(userData.profile_picture as string);
+        userData.profile_picture = `data:image/jpeg;base64,${buffer.toString('base64')}`;
       }
 
       res.status(200).json(userData);
@@ -404,6 +418,7 @@ router.get('/v1/foods', (req: Request, res: Response): void => {
       error: 'Food not found. Please provide a valid food name.',
     });
   }
-});
 
 export default router;
+
+

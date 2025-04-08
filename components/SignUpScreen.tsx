@@ -89,15 +89,35 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
   };
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Correct usage for picking images
-      allowsEditing: true,
-      aspect: [3, 3],
-      quality: 1,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Correct usage for picking images
+        allowsEditing: true,
+        aspect: [3, 3],
+        quality: 1,
+      });
 
-    if (!result.canceled) {
-      setProfilePicture(result.assets[0].uri);
+      if (!result.canceled) {
+        const uriParts = result.assets[0].uri.split('.');
+        const fileType = uriParts[uriParts.length - 1].toLowerCase();
+
+        // Validate file type
+        if (!['jpg', 'jpeg', 'png'].includes(fileType)) {
+          Alert.alert('Error', 'Only JPEG and PNG images are allowed.');
+          return;
+        }
+
+        // Validate file size (if available)
+        if (result.assets[0].fileSize && result.assets[0].fileSize > 5 * 1024 * 1024) {
+          Alert.alert('Error', 'File size exceeds the limit of 5 MB.');
+          return;
+        }
+
+        setProfilePicture(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick an image.');
     }
   };
 
