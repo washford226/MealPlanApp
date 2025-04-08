@@ -28,20 +28,20 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
         if (!token) {
           throw new Error('No token found');
         }
-
+  
         const response = await axios.get(`${BASE_URL}/user`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
+  
         setUsername(response.data.username);
         setCaloriesGoal(response.data.calories_goal);
         setDietaryRestrictions(response.data.dietary_restrictions);
-
-        // Ensure the profile picture is a valid URL or Base64 string
+  
+        // Directly set the profile picture from the response
         if (response.data.profile_picture) {
-          setProfilePicture(`data:image/jpeg;base64,${response.data.profile_picture}`);
+          setProfilePicture(response.data.profile_picture); // No need to prepend "data:image/jpeg;base64,"
         } else {
           setProfilePicture(null);
         }
@@ -49,7 +49,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
         console.error('Error fetching user data:', error);
       }
     };
-
+  
     fetchUserData();
   }, []);
 
