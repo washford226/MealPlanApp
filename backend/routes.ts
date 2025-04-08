@@ -381,6 +381,63 @@ router.post('/add-meal', authMiddleware, (req: Request, res: Response) => {
     });
 });
 
+
+// Add a meal to the meal plan
+router.post('/meal-plan', authMiddleware, (req: Request, res: Response): void => {
+  const { meal_id, date, meal_type } = req.body; // Extract data from the request body
+  const db = (req as any).db; // Get the database instance
+
+  // Validate the input
+  if (!meal_id || !date || !meal_type) {
+    res.status(400).send('Meal ID, date, and meal type are required');
+    return;
+  }
+
+  // Ensure the meal_type is valid
+  const validMealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Other'];
+  if (!validMealTypes.includes(meal_type)) {
+    res.status(400).send(`Invalid meal type. Valid types are: ${validMealTypes.join(', ')}`);
+    return;
+  }
+=======
+// Define the foodData object with nutritional information
+const foodData: Record<string, any> = {
+  apple: {
+    calories: 52,
+    protein: 0.3,
+    carbohydrates: 14,
+    fat: 0.2,
+  },
+  banana: {
+    calories: 96,
+    protein: 1.3,
+    carbohydrates: 27,
+    fat: 0.3,
+  },
+  chicken: {
+    calories: 239,
+    protein: 27,
+    carbohydrates: 0,
+    fat: 14,
+  },
+  // Add more foods as needed
+};
+
+// API Endpoint to retrieve nutritional information for foods via query parameters
+router.get('/v1/foods', (req: Request, res: Response): void => {
+  const foodName = req.query.food?.toString().toLowerCase();
+
+  if (foodName && foodData[foodName]) {
+    res.status(200).json({
+      food: foodName,
+      nutrition: foodData[foodName],
+    });
+  } else {
+    res.status(404).json({
+      error: 'Food not found. Please provide a valid food name.',
+    });
+  }
+
 // Define the foodData object with nutritional information
 const foodData: Record<string, any> = {
   apple: {
