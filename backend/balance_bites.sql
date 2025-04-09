@@ -17,14 +17,14 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Create the categories table (moved before Foods table)
-CREATE TABLE IF NOT EXISTS Categories  (
+CREATE TABLE Categories (
     category_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL UNIQUE, -- Added UNIQUE constraint
     description TEXT DEFAULT NULL
 );
 
 -- Create the foods table
-CREATE TABLE IF NOT EXISTS Foods (
+CREATE TABLE Foods (
     food_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL UNIQUE, -- Added UNIQUE constraint
     description TEXT DEFAULT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS Foods (
 
 -- Create the meals table
 CREATE TABLE IF NOT EXISTS meals (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY UNIQUE,
     user_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS meals (
 );
 
 -- Create the nutrients table
-CREATE TABLE IF NOT EXISTS Nutrients (
+CREATE TABLE Nutrients (
     nutrient_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL UNIQUE, -- Added UNIQUE constraint
     unit VARCHAR(50) NOT NULL,  -- (e.g., grams, milligrams, IU)
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS Nutrients (
 );
 
 -- Create the food nutrient table
-CREATE TABLE IF NOT EXISTS Food_Nutrient (
+CREATE TABLE Food_Nutrient (
     food_id INT,
     nutrient_id INT,
     amount FLOAT NOT NULL,  -- Changed to FLOAT for flexibility
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS Food_Nutrient (
 );
 
 -- Create the portions table
-CREATE TABLE IF NOT EXISTS Portions (
+CREATE TABLE Portions (
     portion_id INT PRIMARY KEY AUTO_INCREMENT,
     food_id INT,
     weight_in_grams FLOAT,  -- Changed to FLOAT for flexibility
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS Portions (
 );
 
 -- Create the reviews table
-CREATE TABLE IF NOT EXISTS Reviews (
+CREATE TABLE Reviews (
     review_id INT PRIMARY KEY AUTO_INCREMENT, -- Unique identifier for each review
     meal_id INT NOT NULL, -- Foreign key to the meals table
     user_id INT NOT NULL, -- Foreign key to the users table

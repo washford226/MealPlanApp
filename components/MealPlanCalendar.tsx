@@ -1,23 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Button, Modal, TextInput, Alert } from "react-native";
 import { format, startOfWeek, addDays, subWeeks, isSameDay } from "date-fns";
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 import { useTheme } from "@/context/ThemeContext"; // Import ThemeContext
-=======
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from "@react-navigation/stack";
->>>>>>> Stashed changes
-=======
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from "@react-navigation/stack";
->>>>>>> Stashed changes
 
-const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: () => void }) => {
+const MealPlanCalendar = () => {
   const today = new Date();
+  const [weeksToShow, setWeeksToShow] = useState(1);
   const [startDate, setStartDate] = useState(startOfWeek(today, { weekStartsOn: 0 }));
   const scrollViewRef = useRef<ScrollView>(null);
-  const [weeksToShow, setWeeksToShow] = useState(1);
   const hasCenteredOnToday = useRef(false);
 
   const { theme } = useTheme(); // Access the theme from ThemeContext
@@ -78,8 +68,6 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
         hasCenteredOnToday.current = true;
       }
     }
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
   }, [days]); // Dependency array includes days to ensure it runs when days change
 
   // Function to add a new meal
@@ -141,12 +129,6 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
       setNewMealName("");
     }
   };
-=======
-  }, [days]);
->>>>>>> Stashed changes
-=======
-  }, [days]);
->>>>>>> Stashed changes
 
   // Function to show more days (add another week)
   const showMoreDays = () => {
@@ -185,8 +167,6 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
                 <Text style={[styles.date, { color: theme.text }]}>{format(day, "MM/dd")}</Text>
                 <View style={styles.mealsContainer}>
                   {dayMeals.map((meal) => (
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
                     <TouchableOpacity
                       key={meal.name}
                       style={[styles.meal, { backgroundColor: meal.color }]}
@@ -197,74 +177,19 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
                   ))}
                 </View>
                 <Button title="Add Meal" onPress={() => openModal(dayString)} color={theme.button} />
-=======
-=======
->>>>>>> Stashed changes
-                    <TouchableOpacity key={meal.name} style={[styles.meal, { backgroundColor: meal.color }]} onPress={() => console.log(`Selected meal: ${meal.name}`)}>
-                      <Text style={styles.mealText}>{meal.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
               </View>
             );
           })}
           <Button title="Show More Days" onPress={showMoreDays} color={theme.button} />
         </View>
       </ScrollView>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
-      {/* New Create Meal Button */}
-      <View style={styles.createMealButtonContainer}>
-        <TouchableOpacity style={styles.createMealButton} onPress={onNavigateToCreateMeal}>
-          <Text style={styles.createMealButtonText}>Create Meal</Text>
-        </TouchableOpacity>
-      </View>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalView}>
-          <Text style={styles.modalText}>Enter Meal Name:</Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={setNewMealName}
-            value={newMealName}
-            placeholder="Meal Name"
-          />
-          <Button title="Add" onPress={() => console.log("Add meal logic here")} />
-          <Button title="Cancel" onPress={() => setModalVisible(false)} />
-        </View>
-      </Modal>
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
     flex: 1,
-=======
-    flexDirection: "row",
-    alignItems: "center",
->>>>>>> Stashed changes
-=======
-    flexDirection: "row",
-    alignItems: "center",
->>>>>>> Stashed changes
   },
   scrollView: {
     flex: 1,
@@ -277,28 +202,12 @@ const styles = StyleSheet.create({
     width: 100,
     padding: 8,
     borderWidth: 1,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-    borderColor: "#ddd",
->>>>>>> Stashed changes
-=======
-    borderColor: "#ddd",
->>>>>>> Stashed changes
     borderRadius: 8,
     alignItems: "center",
     marginRight: 16,
   },
   todayContainer: {
     borderWidth: 2,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-    borderColor: "black",
->>>>>>> Stashed changes
-=======
-    borderColor: "black",
->>>>>>> Stashed changes
   },
   dayName: {
     fontWeight: "bold",
@@ -316,56 +225,6 @@ const styles = StyleSheet.create({
   },
   mealText: {
     color: "#fff",
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
-  },
-  createMealButtonContainer: {
-    marginTop: 16,
-    alignItems: "center",
-  },
-  createMealButton: {
-    backgroundColor: "#007BFF",
-    padding: 12,
-    borderRadius: 8,
-  },
-  createMealButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 35,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalText: {
-    marginBottom: 15,
-    textAlign: "center",
-  },
-  input: {
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    marginBottom: 15,
-    paddingLeft: 10,
-    width: "80%",
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
   },
 });
 

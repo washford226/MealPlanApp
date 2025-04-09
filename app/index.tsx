@@ -9,16 +9,8 @@ import OtherMeals from "@/components/OtherMeals";
 import MealDetails from "@/components/MealDetails";
 import CreateReview from "@/components/CreateReview";
 import ViewReviews from "@/components/ViewReviews";
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 import MyMeals from "@/components/MyMeals";
 import MyMealInfo from "@/components/MyMealInfo";
-=======
-import CreateMealScreen from "@/components/CreateMealScreen";
->>>>>>> Stashed changes
-=======
-import CreateMealScreen from "@/components/CreateMealScreen";
->>>>>>> Stashed changes
 import Icon from "react-native-vector-icons/FontAwesome";
 import { Meal } from "@/types/types";
 
@@ -32,14 +24,6 @@ function Index() {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [isCreatingReview, setIsCreatingReview] = useState(false);
   const [isViewingReviews, setIsViewingReviews] = useState(false);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-  const [isCreatingMeal, setIsCreatingMeal] = useState(false);
->>>>>>> Stashed changes
-=======
-  const [isCreatingMeal, setIsCreatingMeal] = useState(false);
->>>>>>> Stashed changes
 
   const handleLogin = () => setIsLoggedIn(true);
 
@@ -59,7 +43,6 @@ function Index() {
     setIsOtherMealsScreen(false);
     setIsMyMealsScreen(false);
     setSelectedMeal(null);
-    setIsCreatingMeal(false);
   };
 
   const handleNavigateToForgotPassword = () => setIsForgotPasswordScreen(true);
@@ -97,30 +80,12 @@ function Index() {
   const handleReviewSubmit = () => {
     setIsCreatingReview(false);
     setSelectedMeal(null);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
-  };
-
-  const handleNavigateToCreateMeal = () => {
-    setIsCreatingMeal(true);
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
   };
 
   return (
     <View style={styles.container}>
       {isLoggedIn ? (
-        isCreatingMeal ? (
-          <CreateMealScreen
-            route={{ params: { selectedDay: "2023-04-07" } }} // Pass params explicitly
-            navigation={{ goBack: handleBackToCalendar }} // Mock navigation
-          />
-        ) : isCreatingReview && selectedMeal ? (
+        isCreatingReview && selectedMeal ? (
           <CreateReview
             meal={selectedMeal}
             onReviewSubmit={handleReviewSubmit}
@@ -132,7 +97,6 @@ function Index() {
             onBack={() => setIsViewingReviews(false)}
           />
         ) : selectedMeal ? (
-<<<<<<< Updated upstream
           isOtherMealsScreen ? (
             <MealDetails
               meal={selectedMeal}
@@ -146,14 +110,6 @@ function Index() {
               onBack={() => setSelectedMeal(null)}
             />
           )
-=======
-          <MealDetails
-            meal={selectedMeal}
-            onBack={() => setSelectedMeal(null)}
-            onAddReview={handleAddReview}
-            onViewReviews={handleViewReviews}
-          />
->>>>>>> Stashed changes
         ) : isAccountScreen ? (
           <>
             <AccountScreen onLogout={() => setIsLoggedIn(false)} />
@@ -162,21 +118,9 @@ function Index() {
                 <Icon name="calendar" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Calendar</Text>
               </TouchableOpacity>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToMyMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
                 <Text style={styles.barButtonText}>My Meals</Text>
-=======
-              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToCreateMeal}>
-                <Icon name="plus" size={24} color="#000" />
-                <Text style={styles.barButtonText}>Add Meal</Text>
->>>>>>> Stashed changes
-=======
-              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToCreateMeal}>
-                <Icon name="plus" size={24} color="#000" />
-                <Text style={styles.barButtonText}>Add Meal</Text>
->>>>>>> Stashed changes
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
@@ -196,8 +140,6 @@ function Index() {
                 <Icon name="calendar" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Calendar</Text>
               </TouchableOpacity>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToMyMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
                 <Text style={styles.barButtonText}>My Meals</Text>
@@ -223,16 +165,6 @@ function Index() {
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToMyMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
                 <Text style={styles.barButtonText}>My Meals</Text>
-=======
-              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToCreateMeal}>
-                <Icon name="plus" size={24} color="#000" />
-                <Text style={styles.barButtonText}>Add Meal</Text>
->>>>>>> Stashed changes
-=======
-              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToCreateMeal}>
-                <Icon name="plus" size={24} color="#000" />
-                <Text style={styles.barButtonText}>Add Meal</Text>
->>>>>>> Stashed changes
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
@@ -245,39 +177,16 @@ function Index() {
             </View>
           </>
         ) : (
-<<<<<<< Updated upstream
           <View style={styles.calendarContainer}>
             <MealPlanCalendar />
-=======
-          <>
-            <View style={styles.header}>
-              <Text style={styles.title}>My Calendar</Text>
-            </View>
-            <MealPlanCalendar onNavigateToCreateMeal={handleNavigateToCreateMeal} />
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
             <View style={styles.bottomBar}>
               <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>
                 <Icon name="calendar" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Calendar</Text>
               </TouchableOpacity>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToMyMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
                 <Text style={styles.barButtonText}>My Meals</Text>
-=======
-              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToCreateMeal}>
-                <Icon name="plus" size={24} color="#000" />
-                <Text style={styles.barButtonText}>Add Meal</Text>
->>>>>>> Stashed changes
-=======
-              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToCreateMeal}>
-                <Icon name="plus" size={24} color="#000" />
-                <Text style={styles.barButtonText}>Add Meal</Text>
->>>>>>> Stashed changes
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
