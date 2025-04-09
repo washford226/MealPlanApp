@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, Image } from "react-native";
 import axios from "axios";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+const logo = require("../assets/images/logo-transparent-png.png"); // Update the path if the file name or location is different
 
 const LoginScreen = ({
   onLogin,
@@ -35,7 +36,13 @@ const LoginScreen = ({
 
   return (
     <View style={styles.container}>
+      {/* Logo */}
+      <Image source={logo} style={styles.logo} />
+
+      {/* Title */}
       <Text style={styles.title}>Login</Text>
+
+      {/* Input Fields */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -61,6 +68,8 @@ const LoginScreen = ({
           <Text style={styles.showPasswordText}>{isPasswordVisible ? "Hide" : "Show"}</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Buttons */}
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
@@ -81,6 +90,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     width: "100%", // Ensure the container spans the full width
+  },
+  logo: {
+    width: 120, // Adjust the width of the logo
+    height: 120, // Adjust the height of the logo
+    marginBottom: 16, // Add spacing below the logo
   },
   title: {
     fontSize: 24,
