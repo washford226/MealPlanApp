@@ -227,25 +227,41 @@ router.get('/user', authMiddleware, (req: Request, res: Response) => {
 });
 
 // Upload profile picture
-router.post('/upload-profile-picture', authMiddleware, upload.single('profile_picture'), (req: Request, res: Response): void => {
+router.post('/upload-profile-picture', authMiddleware, upload.single('profile_picture'), async (req: Request, res: Response): Promise<void> => {
   const user = (req as any).user;
   const db = (req as any).db;
-  const profilePicture = req.file?.buffer;
+  const profilePicture = req.file;
 
-  if (!profilePicture) {
-    res.status(400).send('No file uploaded');
-    return;
+  try {
+    // Validate file existence
+    if (!profilePicture) {
+      res.status(400).send({ message: 'No file uploaded' });
+      return;
+    }
+
+    // Validate file type
+    const allowedMimeTypes = ['image/jpeg', 'image/png'];
+    if (!allowedMimeTypes.includes(profilePicture.mimetype)) {
+      res.status(400).send({ message: 'Invalid file type. Only JPEG and PNG are allowed.' });
+      return;
+    }
+
+    // Validate file size (limit to 5 MB)
+    const maxFileSize = 5 * 1024 * 1024; // 5 MB
+    if (profilePicture.size > maxFileSize) {
+      res.status(400).send({ message: 'File size exceeds the limit of 5 MB.' });
+      return;
+    }
+
+    // Save the profile picture to the database
+    const query = 'UPDATE users SET profile_picture = ? WHERE id = ?';
+    await db.query(query, [profilePicture.buffer, user.id]);
+
+    res.status(200).send({ message: 'Profile picture uploaded successfully' });
+  } catch (err) {
+    console.error('Error uploading profile picture:', err);
+    res.status(500).send({ message: 'Error uploading profile picture' });
   }
-
-  const query = 'UPDATE users SET profile_picture = ? WHERE id = ?';
-  db.query(query, [profilePicture, user.id])
-    .then(() => {
-      res.status(200).send('Profile picture uploaded successfully');
-    })
-    .catch((err: Error) => {
-      console.error('Error uploading profile picture:', err);
-      res.status(500).send('Error uploading profile picture');
-    });
 });
 
 const buildUpdateQuery = (fields: Record<string, any>) => {
@@ -436,6 +452,7 @@ router.get('/my-meals', authMiddleware, async (req: Request, res: Response): Pro
       meals.protein, 
       meals.carbohydrates, 
       meals.fat, 
+      meals.visibility,
       meals.created_at
     FROM meals
     WHERE meals.user_id = ? -- Filter by the current user's ID

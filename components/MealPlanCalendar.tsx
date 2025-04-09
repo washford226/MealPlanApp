@@ -24,19 +24,21 @@ const MealPlanCalendar = () => {
     [key: string]: Meal[];
   };
 
-  const mealColors = {
-    Breakfast: "red",
-    Lunch: "green",
-    Dinner: "blue",
-    Snack: "purple",
-  };
-
   // Function to generate default meals for a day
-  const generateMeals = (): Meal[] => [
-    { name: "Breakfast", color: mealColors.Breakfast },
-    { name: "Lunch", color: mealColors.Lunch },
-    { name: "Dinner", color: mealColors.Dinner },
-  ];
+  const generateMeals = (): Meal[] => {
+    const mealColors = theme.mealColors || {
+      breakfast: "#ff6f61", // Default red for breakfast
+      lunch: "#4caf50", // Default green for lunch
+      dinner: "#2196f3", // Default blue for dinner
+      snack: "#9c27b0", // Default purple for snacks
+    };
+  
+    return [
+      { name: "Breakfast", color: mealColors.breakfast },
+      { name: "Lunch", color: mealColors.lunch },
+      { name: "Dinner", color: mealColors.dinner },
+    ];
+  };
 
   // Function to initialize meals for the given days
   const initializeMeals = (days: Date[], existingMeals: Meals): Meals => {
@@ -76,7 +78,7 @@ const MealPlanCalendar = () => {
       Alert.alert("Error", "Meal name already exists for this day.");
       return;
     }
-    const newMeal: Meal = { name: newMealName, color: mealColors.Snack };
+    const newMeal: Meal = { name: newMealName, color: theme.mealColors.snack };
     setMeals((prevMeals) => ({
       ...prevMeals,
       [selectedDay]: [...prevMeals[selectedDay], newMeal],
@@ -164,7 +166,7 @@ const MealPlanCalendar = () => {
                 ]}
               >
                 <Text style={[styles.dayName, { color: theme.text }]}>{format(day, "EEEE")}</Text>
-                <Text style={[styles.date, { color: theme.text }]}>{format(day, "MM/dd")}</Text>
+                <Text style={[styles.date, { color: theme.subtext }]}>{format(day, "MM/dd")}</Text>
                 <View style={styles.mealsContainer}>
                   {dayMeals.map((meal) => (
                     <TouchableOpacity
@@ -172,7 +174,7 @@ const MealPlanCalendar = () => {
                       style={[styles.meal, { backgroundColor: meal.color }]}
                       onPress={() => openEditModal(dayString, meal)}
                     >
-                      <Text style={[styles.mealText, { color: theme.text }]}>{meal.name}</Text>
+                      <Text style={[styles.mealText, { color: theme.mealText }]}>{meal.name}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -213,7 +215,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   date: {
-    color: "#888",
+    marginTop: 4,
   },
   mealsContainer: {
     marginTop: 8,
@@ -224,7 +226,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   mealText: {
-    color: "#fff",
+    fontSize: 14,
   },
 });
 

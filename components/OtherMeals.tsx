@@ -75,7 +75,7 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.text} />
+        <ActivityIndicator size="large" color={theme.primary} />
         <Text style={[styles.loadingText, { color: theme.text }]}>Loading meals...</Text>
       </View>
     );
@@ -93,9 +93,9 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Search Bar */}
       <TextInput
-        style={[styles.searchBar, { borderColor: theme.text, color: theme.text }]}
+        style={[styles.searchBar, { borderColor: theme.border, color: theme.text }]}
         placeholder="Search meals..."
-        placeholderTextColor={theme.text}
+        placeholderTextColor={theme.placeholder}
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
@@ -105,16 +105,16 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
         data={filteredMeals}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={[styles.mealItem, { backgroundColor: theme.button }]}>
+          <View style={[styles.mealItem, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <TouchableOpacity onPress={() => onMealSelect(item)}>
-              <Text style={[styles.mealName, { color: theme.buttonText }]}>{item.name}</Text>
-              <Text style={[styles.mealDescription, { color: theme.buttonText }]}>{item.description}</Text>
-              <Text style={[styles.mealUser, { color: theme.buttonText }]}>By: {item.userName}</Text>
+              <Text style={[styles.mealName, { color: theme.text }]}>{item.name}</Text>
+              <Text style={[styles.mealDescription, { color: theme.subtext }]}>{item.description}</Text>
+              <Text style={[styles.mealUser, { color: theme.subtext }]}>By: {item.userName}</Text>
               <StarRating
                 rating={Math.round(Math.min(Math.max(Number(item.averageRating || 0), 0), 5))}
                 maxStars={5}
                 starSize={20}
-                color="#FFD700"
+                color={theme.starColor} // Use theme's starColor
                 enableSwiping={false}
                 onChange={() => {}}
               />

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import axios from "axios";
 import { Platform } from "react-native";
 
@@ -33,11 +33,14 @@ const ForgotPasswordScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) 
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        placeholderTextColor="#aaa"
       />
-      <View style={styles.buttonSpacing} />
-      <Button title="Send Reset Link" onPress={handleForgotPassword} />
-      <View style={styles.buttonSpacing} />
-      <Button title="Back to Login" onPress={onBackToLogin} />
+      <TouchableOpacity style={styles.button} onPress={handleForgotPassword}>
+        <Text style={styles.buttonText}>Send Reset Link</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={onBackToLogin}>
+        <Text style={[styles.buttonText, styles.secondaryButtonText]}>Back to Login</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -48,21 +51,43 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 16,
+    backgroundColor: "#f9f9f9", // Optional: Add a background color for consistency
   },
   title: {
     fontSize: 24,
-    marginBottom: 16,
+    fontWeight: "bold",
+    marginBottom: 24,
+    color: "#333",
   },
   input: {
     width: "80%",
-    padding: 8,
+    padding: 12,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 4,
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    fontSize: 16,
+    color: "#333",
   },
-  buttonSpacing: {
-    height: 16, // Add space between buttons
+  button: {
+    width: "80%",
+    padding: 12,
+    backgroundColor: "#007bff",
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  secondaryButton: {
+    backgroundColor: "#f0f0f0",
+  },
+  secondaryButtonText: {
+    color: "#007bff",
   },
 });
 

@@ -8,5 +8,6 @@ export interface Meal {
     fat: number;
     userName: string;
     ingredients: string;
+    visibility: boolean; // Added visibility property
     averageRating: number;
   }

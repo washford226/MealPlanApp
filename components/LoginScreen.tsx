@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import axios from "axios";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -16,109 +16,60 @@ const LoginScreen = ({
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [failedAttempts, setFailedAttempts] = useState(0);
-  const [lockoutTime, setLockoutTime] = useState<number | null>(null);
-
-  useEffect(() => {
-    const loadCredentials = async () => {
-      const storedFailedAttempts = await AsyncStorage.getItem("failedAttempts");
-      const storedLockoutTime = await AsyncStorage.getItem("lockoutTime");
-
-      if (storedFailedAttempts) {
-        setFailedAttempts(parseInt(storedFailedAttempts, 10));
-      }
-
-      if (storedLockoutTime) {
-        setLockoutTime(parseInt(storedLockoutTime, 10));
-      }
-    };
-
-    loadCredentials();
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (lockoutTime && Date.now() >= lockoutTime) {
-        setLockoutTime(null);
-        setFailedAttempts(0);
-        AsyncStorage.removeItem("lockoutTime");
-        AsyncStorage.setItem("failedAttempts", "0");
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [lockoutTime]);
-
-  const getBaseUrl = () => {
-    return Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
-  };
 
   const handleLogin = async () => {
-    if (lockoutTime && Date.now() < lockoutTime) {
-      Alert.alert("Too many attempts", "Please wait 5 minutes before trying again.");
-      return;
-    }
-
     try {
-      const response = await axios.post(`${getBaseUrl()}/login`, {
+      const response = await axios.post(`${Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000"}/login`, {
         username,
         password,
       });
       if (response.status === 200) {
         const { token } = response.data;
         await AsyncStorage.setItem("token", token);
-        setFailedAttempts(0);
-        await AsyncStorage.setItem("failedAttempts", "0");
         onLogin();
       }
     } catch (error) {
-      const newFailedAttempts = failedAttempts + 1;
-      setFailedAttempts(newFailedAttempts);
-      await AsyncStorage.setItem("failedAttempts", newFailedAttempts.toString());
-
-      if (newFailedAttempts >= 5) {
-        const newLockoutTime = Date.now() + 5 * 60 * 1000;
-        setLockoutTime(newLockoutTime);
-        await AsyncStorage.setItem("lockoutTime", newLockoutTime.toString());
-        Alert.alert("Too many attempts", "Please wait 5 minutes before trying again.");
-      } else {
-        Alert.alert("Invalid credentials", "Please enter the correct username and password.");
-      }
-
-      console.error("Error during login:", error);
+      Alert.alert("Error", "Invalid username or password.");
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-      />
-      <View style={styles.passwordContainer}>
+      <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
+          placeholder="Username"
+          value={username}
+          onChangeText={setUsername}
+          textAlign="left"
+        />
+      </View>
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
           placeholder="Password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!isPasswordVisible}
+          textAlign="left"
         />
         <TouchableOpacity
           style={styles.showPasswordButton}
           onPress={() => setIsPasswordVisible(!isPasswordVisible)}
         >
-          <Text>{isPasswordVisible ? "Hide" : "Show"}</Text>
+          <Text style={styles.showPasswordText}>{isPasswordVisible ? "Hide" : "Show"}</Text>
         </TouchableOpacity>
       </View>
-      <Button title="Login" onPress={handleLogin} />
-      <View style={styles.buttonSpacing} />
-      <Button title="Create Account" onPress={onNavigateToSignUp} />
-      <View style={styles.buttonSpacing} /> 
-      <Button title="Forgot username or password?" onPress={onNavigateForgotPassword}
-      />
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={onNavigateToSignUp}>
+        <Text style={styles.buttonText}>Create Account</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={onNavigateForgotPassword}>
+        <Text style={styles.forgotPasswordText}>Forgot username or password?</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -129,29 +80,72 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 16,
+    width: "100%", // Ensure the container spans the full width
   },
   title: {
     fontSize: 24,
     marginBottom: 16,
   },
-  input: {
-    width: "80%",
-    padding: 8,
+  inputContainer: {
+    width: "100%", // Ensure the container stretches across the screen
     marginBottom: 16,
     borderWidth: 1,
+    borderRadius: 8,
     borderColor: "#ccc",
-    borderRadius: 4,
+    backgroundColor: "#fff",
+    paddingHorizontal: 8, // Add padding inside the container
+  },
+  input: {
+    width: "100%", // Explicitly set the width of the TextInput
+    paddingVertical: 12,
+    fontSize: 16, // Ensure consistent font size
   },
   passwordContainer: {
-    flexDirection: "row",
+    width: "100%",
+    flexDirection: "row", // Align the password input and button horizontally
     alignItems: "center",
-    width: "80%",
+    borderWidth: 1,
+    borderRadius: 8,
+    borderColor: "#ccc",
+    backgroundColor: "#fff",
+    marginBottom: 16,
+    paddingHorizontal: 8, // Add padding inside the container
+  },
+  passwordInput: {
+    flex: 1, // Allow the password input to take up available space
+    paddingVertical: 12, // Match the padding of the input field
+    fontSize: 16, // Ensure consistent font size
   },
   showPasswordButton: {
-    marginLeft: 8,
+    marginLeft: 8, // Add spacing between the input and the button
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    backgroundColor: "#007bff",
   },
-  buttonSpacing: {
-    height: 16, // Add space between buttons
+  showPasswordText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  button: {
+    width: "100%", // Ensure the button spans the full width
+    paddingVertical: 12,
+    backgroundColor: "#007bff",
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  forgotPasswordText: {
+    color: "#007bff",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 8,
   },
 });
 

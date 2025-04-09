@@ -19,7 +19,6 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
   const [dietaryRestrictions, setDietaryRestrictions] = useState('');
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
 
-  // Request media library permissions
   const requestPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -91,7 +90,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Correct usage for picking images
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [3, 3],
         quality: 1,
@@ -101,13 +100,11 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
         const uriParts = result.assets[0].uri.split('.');
         const fileType = uriParts[uriParts.length - 1].toLowerCase();
 
-        // Validate file type
         if (!['jpg', 'jpeg', 'png'].includes(fileType)) {
           Alert.alert('Error', 'Only JPEG and PNG images are allowed.');
           return;
         }
 
-        // Validate file size (if available)
         if (result.assets[0].fileSize && result.assets[0].fileSize > 5 * 1024 * 1024) {
           Alert.alert('Error', 'File size exceeds the limit of 5 MB.');
           return;
@@ -123,19 +120,18 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
 
   return (
     <View style={styles.container}>
-      {/* Back button to navigate to login screen */}
       <TouchableOpacity style={styles.backButton} onPress={onNavigateToLogin}>
         <Icon name="arrow-back" size={24} color="#000" />
       </TouchableOpacity>
       <Text style={styles.title}>Sign Up</Text>
       <TextInput
-        style={styles.largeInput}
+        style={styles.input}
         placeholder="Username"
         value={username}
         onChangeText={setUsername}
       />
       <TextInput
-        style={styles.largeInput}
+        style={styles.input}
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
@@ -157,14 +153,14 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
         </TouchableOpacity>
       </View>
       <TextInput
-        style={styles.largeInput}
+        style={styles.input}
         placeholder="Calories Goal (optional)"
         value={caloriesGoal}
         onChangeText={setCaloriesGoal}
         keyboardType="numeric"
       />
       <TextInput
-        style={styles.largeInput}
+        style={styles.input}
         placeholder="Dietary Restrictions (optional)"
         value={dietaryRestrictions}
         onChangeText={setDietaryRestrictions}
@@ -178,7 +174,9 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
           style={styles.profilePicture}
         />
       )}
-      <Button title="Sign Up" onPress={handleSignUp} />
+      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+        <Text style={styles.buttonText}>Sign Up</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -186,62 +184,82 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
+    width: "100%", // Ensure the container spans the full width
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 40,
     left: 20,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 20,
   },
-  largeInput: {
+  input: {
+    width: "100%", // Ensure the input spans the full width of the container
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     padding: 15,
     marginBottom: 10,
-    borderRadius: 5,
-    width: '100%',
+    borderRadius: 8,
+    backgroundColor: "#fff",
   },
   passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%", // Ensure the password container spans the full width
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    marginBottom: 10,
+    paddingHorizontal: 8,
   },
   passwordInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-    width: '70%',
+    flex: 1, // Allow the password input to take up available space
+    paddingVertical: 12,
+    fontSize: 16,
   },
   showPasswordButton: {
     marginLeft: 8,
   },
   uploadButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
+    width: "100%", // Ensure the button spans the full width
+    backgroundColor: "#007bff",
+    padding: 15,
+    borderRadius: 8,
     marginBottom: 10,
+    alignItems: "center",
   },
   uploadButtonText: {
-    color: '#fff',
-    textAlign: 'center',
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   profilePicture: {
     width: 150,
     height: 150,
-    borderRadius: 75, // Makes the image circular
+    borderRadius: 75,
     marginBottom: 10,
-    borderWidth: 2, // Optional: Add a border
-    borderColor: '#ccc', // Optional: Border color
+    borderWidth: 2,
+    borderColor: "#ccc",
+  },
+  button: {
+    width: "100%", // Ensure the button spans the full width
+    backgroundColor: "#007bff",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

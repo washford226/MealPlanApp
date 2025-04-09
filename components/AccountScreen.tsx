@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, TextInput, StyleSheet, Platform, Image } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@/context/ThemeContext'; // Import the ThemeContext
@@ -31,20 +32,20 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
         if (!token) {
           throw new Error('No token found');
         }
-  
+
         const response = await axios.get(`${BASE_URL}/user`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-  
+
         setUsername(response.data.username);
         setCaloriesGoal(response.data.calories_goal);
         setDietaryRestrictions(response.data.dietary_restrictions);
-  
+
         // Directly set the profile picture from the response
         if (response.data.profile_picture) {
-          setProfilePicture(response.data.profile_picture); // No need to prepend "data:image/jpeg;base64,"
+          setProfilePicture(response.data.profile_picture);
         } else {
           setProfilePicture(null);
         }
@@ -52,7 +53,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
         console.error('Error fetching user data:', error);
       }
     };
-  
+
     fetchUserData();
   }, []);
 
@@ -148,6 +149,47 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
     }
   };
 
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1], // Square aspect ratio
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          throw new Error('No token found');
+        }
+
+        const formData = new FormData();
+        formData.append('profile_picture', {
+          uri: result.assets[0].uri,
+          name: 'profile_picture.jpg',
+          type: 'image/jpeg',
+        } as any);
+
+        const response = await axios.post(`${BASE_URL}/upload-profile-picture`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        if (response.status === 200) {
+          Alert.alert('Success', 'Profile picture updated successfully');
+          setProfilePicture(result.assets[0].uri); // Update the profile picture state
+        }
+      }
+    } catch (error) {
+      console.error('Error updating profile picture:', error);
+      Alert.alert('Error', 'Failed to update profile picture');
+    }
+  };
+
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Profile Picture */}
@@ -158,6 +200,9 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
           <Text style={[styles.profilePicturePlaceholderText, { color: theme.text }]}>No Picture</Text>
         </View>
       )}
+      <TouchableOpacity style={styles.updatePictureButton} onPress={pickImage}>
+        <Text style={styles.updatePictureButtonText}>Update Profile Picture</Text>
+      </TouchableOpacity>
 
       <Text style={[styles.title, { color: theme.text }]}>Welcome, {username}!</Text>
 
@@ -171,9 +216,9 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
       {isEditingCaloriesGoal && (
         <View>
           <TextInput
-            style={[styles.input, { borderColor: theme.text, color: theme.text }]}
+            style={[styles.input, { borderColor: theme.border, color: theme.text }]}
             placeholder="Enter new calories goal"
-            placeholderTextColor={theme.text}
+            placeholderTextColor={theme.placeholder}
             value={newCaloriesGoal}
             onChangeText={setNewCaloriesGoal}
             keyboardType="numeric"
@@ -182,7 +227,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
             <Text style={{ color: theme.button, marginTop: 10 }}>Save</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setIsEditingCaloriesGoal(false)}>
-            <Text style={{ color: 'red', marginTop: 10 }}>Cancel</Text>
+            <Text style={{ color: theme.danger, marginTop: 10 }}>Cancel</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -197,9 +242,9 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
       {isEditingDietaryRestrictions && (
         <View>
           <TextInput
-            style={[styles.input, { borderColor: theme.text, color: theme.text }]}
+            style={[styles.input, { borderColor: theme.border, color: theme.text }]}
             placeholder="Enter new dietary restrictions"
-            placeholderTextColor={theme.text}
+            placeholderTextColor={theme.placeholder}
             value={newDietaryRestrictions}
             onChangeText={setNewDietaryRestrictions}
           />
@@ -207,17 +252,17 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
             <Text style={{ color: theme.button, marginTop: 10 }}>Save</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setIsEditingDietaryRestrictions(false)}>
-            <Text style={{ color: 'red', marginTop: 10 }}>Cancel</Text>
+            <Text style={{ color: theme.danger, marginTop: 10 }}>Cancel</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/* Logout and Delete Account */}
       <TouchableOpacity onPress={handleLogout}>
-        <Text style={{ color: 'red', marginTop: 20 }}>Logout</Text>
+        <Text style={{ color: theme.danger, marginTop: 20 }}>Logout</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={handleDeleteAccount}>
-        <Text style={{ color: 'purple', marginTop: 20 }}>Delete Account</Text>
+        <Text style={{ color: theme.warning, marginTop: 20 }}>Delete Account</Text>
       </TouchableOpacity>
 
       {/* Theme Toggle Button */}
@@ -257,6 +302,18 @@ const styles = StyleSheet.create({
   },
   profilePicturePlaceholderText: {
     fontSize: 16,
+  },
+  updatePictureButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  updatePictureButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   title: {
     fontSize: 24,
