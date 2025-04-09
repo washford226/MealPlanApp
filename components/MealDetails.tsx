@@ -1,36 +1,69 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
-import { Meal } from "@/types/types"; // Import the shared Meal interface
-import { useTheme } from "@/context/ThemeContext"; // Import ThemeContext
-
-interface MealDetailsProps {
-  meal: Meal; // Include the meal property in the props
-  onBack: () => void; // Include the onBack property for navigation
-  onAddReview: (meal: Meal) => void; // Callback for navigating to the CreateReview screen
-  onViewReviews: (meal: Meal) => void; // Callback for navigating to the ViewReviews screen
-}
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, TextInput, Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Meal } from "@/types/types";
+import { useTheme } from "@/context/ThemeContext";
 
 const BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
 
-const MealDetails: React.FC<MealDetailsProps> = ({ meal, onBack, onAddReview, onViewReviews }) => {
-  const { theme } = useTheme(); // Access the theme from ThemeContext
+interface MealDetailsProps {
+  meal: Meal;
+  onBack: () => void;
+  onAddReview: (meal: Meal) => void;
+  onViewReviews: (meal: Meal) => void;
+}
 
-  const onAddMeal = async (meal: Meal) => {
+const MealDetails: React.FC<MealDetailsProps> = ({ meal, onBack, onAddReview, onViewReviews }) => {
+  const { theme } = useTheme();
+  const [isReportModalVisible, setIsReportModalVisible] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+
+  const handleReportMeal = async (mealId: number, reason: string) => {
     try {
-      // Retrieve the token from AsyncStorage
       const token = await AsyncStorage.getItem("token");
       if (!token) {
         Alert.alert("Error", "User not authenticated. Please log in.");
         return;
       }
 
-      // Make the POST request to add the meal
+      const response = await fetch(`${BASE_URL}/report`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          meal_id: mealId,
+          reason,
+        }),
+      });
+
+      if (response.ok) {
+        Alert.alert("Success", "Meal reported successfully!");
+      } else {
+        const error = await response.text();
+        console.error("Error response:", error);
+        Alert.alert("Error", `Failed to report meal: ${error}`);
+      }
+    } catch (err) {
+      console.error("Error reporting meal:", err);
+      Alert.alert("Error", "An error occurred while reporting the meal.");
+    }
+  };
+
+  const handleAddMeal = async (meal: Meal) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Error", "User not authenticated. Please log in.");
+        return;
+      }
+
       const response = await fetch(`${BASE_URL}/add-meal`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Use the token from AsyncStorage
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: meal.name,
@@ -88,9 +121,17 @@ const MealDetails: React.FC<MealDetailsProps> = ({ meal, onBack, onAddReview, on
       {/* Add Meal Button */}
       <TouchableOpacity
         style={[styles.addMealButton, { backgroundColor: theme.button }]}
-        onPress={() => onAddMeal(meal)}
+        onPress={() => handleAddMeal(meal)}
       >
         <Text style={[styles.addMealButtonText, { color: theme.buttonText }]}>Add Meal</Text>
+      </TouchableOpacity>
+
+      {/* Report Meal Button */}
+      <TouchableOpacity
+        style={[styles.reportMealButton, { backgroundColor: theme.button }]}
+        onPress={() => setIsReportModalVisible(true)}
+      >
+        <Text style={[styles.reportMealButtonText, { color: theme.buttonText }]}>Report Meal</Text>
       </TouchableOpacity>
 
       {/* Back Button */}
@@ -100,6 +141,52 @@ const MealDetails: React.FC<MealDetailsProps> = ({ meal, onBack, onAddReview, on
       >
         <Text style={[styles.backButtonText, { color: theme.buttonText }]}>Back</Text>
       </TouchableOpacity>
+
+      {/* Report Modal */}
+      <Modal
+        visible={isReportModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setIsReportModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Report Meal</Text>
+            <TextInput
+              style={[styles.modalInput, { borderColor: theme.border, color: theme.text }]}
+              placeholder="Enter reason for reporting"
+              placeholderTextColor={theme.placeholder}
+              value={reportReason}
+              onChangeText={setReportReason}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: theme.button }]}
+                onPress={() => {
+                  if (reportReason.trim() === "") {
+                    Alert.alert("Error", "Reason cannot be empty.");
+                    return;
+                  }
+                  handleReportMeal(meal.id, reportReason);
+                  setIsReportModalVisible(false);
+                  setReportReason("");
+                }}
+              >
+                <Text style={[styles.modalButtonText, { color: theme.buttonText }]}>Submit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: theme.danger }]}
+                onPress={() => {
+                  setIsReportModalVisible(false);
+                  setReportReason("");
+                }}
+              >
+                <Text style={[styles.modalButtonText, { color: theme.buttonText }]}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -167,6 +254,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  reportMealButton: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  reportMealButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   backButton: {
     padding: 12,
     borderRadius: 8,
@@ -174,6 +271,47 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 16,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  modalInput: {
+    width: "100%",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 16,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 8,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

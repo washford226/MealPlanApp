@@ -717,6 +717,28 @@ router.delete('/meal-plan-clear', authMiddleware, (req: Request, res: Response) 
     });
 });
 
+router.post('/report', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const { meal_id, reason } = req.body;
+  const user = (req as any).user; // Authenticated user
+  const db = (req as any).db;
+
+  if (!meal_id || !reason) {
+    res.status(400).send('Meal ID and reason are required');
+    return;
+  }
+
+  try {
+    await db.query(
+      'INSERT INTO REPORTS (user_id, meal_id, reason) VALUES (?, ?, ?)',
+      [user.id, meal_id, reason]
+    );
+    res.status(201).send('Report submitted successfully');
+  } catch (error) {
+    console.error('Error submitting report:', error);
+    res.status(500).send('Error submitting report');
+  }
+});
+
 // Define the foodData object with nutritional information
 const foodData: Record<string, any> = {
   apple: {
