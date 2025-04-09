@@ -30,9 +30,12 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 // Signup user
 router.post('/signup', upload.single('profile_picture'), async (req: Request, res: Response): Promise<void> => {
 =======
+=======
+>>>>>>> Stashed changes
 router.post('/signup', upload.single('profile_picture'), (req: Request, res: Response) => {
 >>>>>>> Stashed changes
   const { username, email, password, calories_goal, dietary_restrictions } = req.body;
@@ -152,6 +155,7 @@ router.get('/user', authMiddleware, (req: Request, res: Response) => {
       }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
       const userData = rows[0];
 
       // Convert the profile_picture BLOB to a Base64 string
@@ -163,6 +167,9 @@ router.get('/user', authMiddleware, (req: Request, res: Response) => {
       }
 
       res.status(200).json(userData);
+=======
+      res.status(200).json(rows[0]);
+>>>>>>> Stashed changes
 =======
       res.status(200).json(rows[0]);
 >>>>>>> Stashed changes
@@ -232,6 +239,7 @@ router.put('/user/calories-goal', authMiddleware, (req: Request, res: Response) 
   const { calories_goal } = req.body;
   const user = (req as any).user;
   const db = (req as any).db;
+<<<<<<< Updated upstream
 
   const query = 'UPDATE users SET calories_goal = ? WHERE id = ?';
   db.query(query, [calories_goal, user.id])
@@ -429,21 +437,114 @@ router.post('/meal-plan', authMiddleware, (req: Request, res: Response): void =>
   const validMealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Other'];
   if (!validMealTypes.includes(meal_type)) {
     res.status(400).send(`Invalid meal type. Valid types are: ${validMealTypes.join(', ')}`);
+=======
+
+  const query = 'UPDATE users SET calories_goal = ? WHERE id = ?';
+  db.query(query, [calories_goal, user.id])
+    .then(() => {
+      res.status(200).send('Calories goal updated successfully');
+    })
+    .catch((err: Error) => {
+      console.error('Error updating calories goal:', err);
+      res.status(500).send('Error updating calories goal');
+    });
+});
+
+router.put('/user/dietary-restrictions', authMiddleware, (req: Request, res: Response) => {
+  const { dietary_restrictions } = req.body;
+  const user = (req as any).user;
+  const db = (req as any).db;
+
+  const query = 'UPDATE users SET dietary_restrictions = ? WHERE id = ?';
+  db.query(query, [dietary_restrictions, user.id])
+    .then(() => {
+      res.status(200).send('Dietary restrictions updated successfully');
+    })
+    .catch((err: Error) => {
+      console.error('Error updating dietary restrictions:', err);
+      res.status(500).send('Error updating dietary restrictions');
+    });
+});
+
+router.get('/user/get-picture', authMiddleware, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const db = (req as any).db;
+
+  db.query('SELECT username, calories_goal, dietary_restrictions, profile_picture FROM users WHERE id = ?', [user.id])
+    .then(([rows]: [User[], any]) => {
+      if (rows.length === 0) {
+        return res.status(404).send('User not found');
+      }
+
+      const userData = rows[0];
+      if (userData.profile_picture) {
+        if (typeof userData.profile_picture === 'string') {
+          userData.profile_picture = Buffer.from(userData.profile_picture).toString('base64');
+        }
+      }
+
+      res.status(200).json(userData);
+    })
+    .catch((err: Error) => {
+      console.error('Error fetching user data:', err);
+      res.status(500).send('Error fetching user data');
+    });
+});
+
+router.post('/meals', authMiddleware, (req: Request, res: Response) => {
+  console.log("Request Body:", req.body); // Debugging: Log the request body
+
+  const { name, description, ingredients, calories, protein, carbohydrates, fat } = req.body.meal || {};
+  const user_id = req.user?.id; // Ensure the user is authenticated
+  const db = (req as any).db;
+
+  if (!user_id) {
+    res.status(401).send('User is not authenticated');
+    return;
+  }
+
+  if (!name || !description || !ingredients) {
+    res.status(400).send('Missing required fields');
+>>>>>>> Stashed changes
     return;
   }
 
   const query = `
+<<<<<<< Updated upstream
     INSERT INTO Meal_Plan (meal_id, date, meal_type)
     VALUES (?, ?, ?)
+=======
+    INSERT INTO meals (name, description, ingredients, calories, protein, carbohydrates, fat, user_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+>>>>>>> Stashed changes
   `;
+  const values = [
+    name,
+    description,
+    JSON.stringify(ingredients), // Convert array to string
+    calories,
+    protein,
+    carbohydrates,
+    fat,
+    user_id,
+  ];
 
+<<<<<<< Updated upstream
   db.query(query, [meal_id, date, meal_type])
+=======
+  db.query(query, values)
+>>>>>>> Stashed changes
     .then(() => {
       res.status(201).send('Meal added to the meal plan successfully');
     })
     .catch((err: Error) => {
+<<<<<<< Updated upstream
       console.error('Error adding meal to the meal plan:', err);
       res.status(500).send('Error adding meal to the meal plan');
+=======
+      console.error("Error adding meal:", err);
+      res.status(500).send('Error adding meal');
+>>>>>>> Stashed changes
     });
 });
 

@@ -10,8 +10,12 @@ import MealDetails from "@/components/MealDetails";
 import CreateReview from "@/components/CreateReview";
 import ViewReviews from "@/components/ViewReviews";
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import MyMeals from "@/components/MyMeals";
 import MyMealInfo from "@/components/MyMealInfo";
+=======
+import CreateMealScreen from "@/components/CreateMealScreen";
+>>>>>>> Stashed changes
 =======
 import CreateMealScreen from "@/components/CreateMealScreen";
 >>>>>>> Stashed changes
@@ -29,6 +33,10 @@ function Index() {
   const [isCreatingReview, setIsCreatingReview] = useState(false);
   const [isViewingReviews, setIsViewingReviews] = useState(false);
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+  const [isCreatingMeal, setIsCreatingMeal] = useState(false);
+>>>>>>> Stashed changes
 =======
   const [isCreatingMeal, setIsCreatingMeal] = useState(false);
 >>>>>>> Stashed changes
@@ -90,11 +98,17 @@ function Index() {
     setIsCreatingReview(false);
     setSelectedMeal(null);
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
   };
 
   const handleNavigateToCreateMeal = () => {
     setIsCreatingMeal(true);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
   };
 
@@ -149,9 +163,15 @@ function Index() {
                 <Text style={styles.barButtonText}>Calendar</Text>
               </TouchableOpacity>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToMyMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
                 <Text style={styles.barButtonText}>My Meals</Text>
+=======
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToCreateMeal}>
+                <Icon name="plus" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Add Meal</Text>
+>>>>>>> Stashed changes
 =======
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToCreateMeal}>
                 <Icon name="plus" size={24} color="#000" />
@@ -176,6 +196,7 @@ function Index() {
                 <Icon name="calendar" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Calendar</Text>
               </TouchableOpacity>
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToMyMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
@@ -207,6 +228,11 @@ function Index() {
                 <Icon name="plus" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Add Meal</Text>
 >>>>>>> Stashed changes
+=======
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToCreateMeal}>
+                <Icon name="plus" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Add Meal</Text>
+>>>>>>> Stashed changes
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
@@ -228,6 +254,9 @@ function Index() {
               <Text style={styles.title}>My Calendar</Text>
             </View>
             <MealPlanCalendar onNavigateToCreateMeal={handleNavigateToCreateMeal} />
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             <View style={styles.bottomBar}>
               <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>
@@ -235,9 +264,15 @@ function Index() {
                 <Text style={styles.barButtonText}>Calendar</Text>
               </TouchableOpacity>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToMyMeals}>
                 <Icon name="cutlery" size={24} color="#000" />
                 <Text style={styles.barButtonText}>My Meals</Text>
+=======
+              <TouchableOpacity style={styles.barButton} onPress={handleNavigateToCreateMeal}>
+                <Icon name="plus" size={24} color="#000" />
+                <Text style={styles.barButtonText}>Add Meal</Text>
+>>>>>>> Stashed changes
 =======
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToCreateMeal}>
                 <Icon name="plus" size={24} color="#000" />

@@ -2,7 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Button, Modal, TextInput, Alert } from "react-native";
 import { format, startOfWeek, addDays, subWeeks, isSameDay } from "date-fns";
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { useTheme } from "@/context/ThemeContext"; // Import ThemeContext
+=======
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from "@react-navigation/stack";
+>>>>>>> Stashed changes
 =======
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -74,6 +79,7 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
       }
     }
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   }, [days]); // Dependency array includes days to ensure it runs when days change
 
   // Function to add a new meal
@@ -138,6 +144,9 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
 =======
   }, [days]);
 >>>>>>> Stashed changes
+=======
+  }, [days]);
+>>>>>>> Stashed changes
 
   // Function to show more days (add another week)
   const showMoreDays = () => {
@@ -177,6 +186,7 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
                 <View style={styles.mealsContainer}>
                   {dayMeals.map((meal) => (
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                     <TouchableOpacity
                       key={meal.name}
                       style={[styles.meal, { backgroundColor: meal.color }]}
@@ -188,11 +198,16 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
                 </View>
                 <Button title="Add Meal" onPress={() => openModal(dayString)} color={theme.button} />
 =======
+=======
+>>>>>>> Stashed changes
                     <TouchableOpacity key={meal.name} style={[styles.meal, { backgroundColor: meal.color }]} onPress={() => console.log(`Selected meal: ${meal.name}`)}>
                       <Text style={styles.mealText}>{meal.name}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
               </View>
             );
@@ -201,7 +216,10 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
         </View>
       </ScrollView>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
       {/* New Create Meal Button */}
       <View style={styles.createMealButtonContainer}>
         <TouchableOpacity style={styles.createMealButton} onPress={onNavigateToCreateMeal}>
@@ -226,6 +244,9 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
           <Button title="Cancel" onPress={() => setModalVisible(false)} />
         </View>
       </Modal>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     </View>
   );
@@ -234,7 +255,12 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
 const styles = StyleSheet.create({
   container: {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     flex: 1,
+=======
+    flexDirection: "row",
+    alignItems: "center",
+>>>>>>> Stashed changes
 =======
     flexDirection: "row",
     alignItems: "center",
@@ -252,6 +278,10 @@ const styles = StyleSheet.create({
     padding: 8,
     borderWidth: 1,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+    borderColor: "#ddd",
+>>>>>>> Stashed changes
 =======
     borderColor: "#ddd",
 >>>>>>> Stashed changes
@@ -262,6 +292,10 @@ const styles = StyleSheet.create({
   todayContainer: {
     borderWidth: 2,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+    borderColor: "black",
+>>>>>>> Stashed changes
 =======
     borderColor: "black",
 >>>>>>> Stashed changes
@@ -283,7 +317,10 @@ const styles = StyleSheet.create({
   mealText: {
     color: "#fff",
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
   },
   createMealButtonContainer: {
     marginTop: 16,
@@ -325,6 +362,9 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingLeft: 10,
     width: "80%",
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
   },
 });
