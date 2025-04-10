@@ -135,7 +135,7 @@ function Index() {
                 <Text style={styles.barButtonText}>My Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
-                <Icon name="cutlery" size={24} color="#000" />
+                <Icon name="users" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Other Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToAccount}>
@@ -157,7 +157,7 @@ function Index() {
                 <Text style={styles.barButtonText}>My Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
-                <Icon name="cutlery" size={24} color="#000" />
+                <Icon name="users" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Other Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToAccount}>
@@ -179,7 +179,7 @@ function Index() {
                 <Text style={styles.barButtonText}>My Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
-                <Icon name="cutlery" size={24} color="#000" />
+                <Icon name="users" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Other Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToAccount}>
@@ -201,7 +201,7 @@ function Index() {
                 <Text style={styles.barButtonText}>My Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToOtherMeals}>
-                <Icon name="cutlery" size={24} color="#000" />
+                <Icon name="users" size={24} color="#000" />
                 <Text style={styles.barButtonText}>Other Meals</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.barButton} onPress={handleNavigateToAccount}>

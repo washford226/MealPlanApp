@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Image } from 'react-native';
-import axios from 'axios';
-import { Platform } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import * as ImagePicker from 'expo-image-picker';
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, Image, Platform } from "react-native";
+import axios from "axios";
+import * as ImagePicker from "expo-image-picker";
 
 interface SignUpScreenProps {
   onSignUp: () => void;
@@ -11,18 +9,18 @@ interface SignUpScreenProps {
 }
 
 const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin }) => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [caloriesGoal, setCaloriesGoal] = useState('');
-  const [dietaryRestrictions, setDietaryRestrictions] = useState('');
+  const [caloriesGoal, setCaloriesGoal] = useState("");
+  const [dietaryRestrictions, setDietaryRestrictions] = useState("");
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
 
   const requestPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Required', 'We need access to your gallery to pick an image.');
+    if (status !== "granted") {
+      Alert.alert("Permission Required", "We need access to your gallery to pick an image.");
     }
   };
 
@@ -31,7 +29,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
   }, []);
 
   const getBaseUrl = () => {
-    return Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://localhost:5000';
+    return Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
   };
 
   const validateEmail = (email: string) => {
@@ -41,25 +39,25 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
 
   const handleSignUp = async () => {
     if (!username || !email || !password) {
-      Alert.alert('Error', 'All fields are required');
+      Alert.alert("Error", "All fields are required");
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('Error', 'Invalid email format');
+      Alert.alert("Error", "Invalid email format");
       return;
     }
 
     const formData = new FormData();
-    formData.append('username', username);
-    formData.append('email', email);
-    formData.append('password', password);
-    if (caloriesGoal) formData.append('calories_goal', caloriesGoal);
-    if (dietaryRestrictions) formData.append('dietary_restrictions', dietaryRestrictions);
+    formData.append("username", username);
+    formData.append("email", email);
+    formData.append("password", password);
+    if (caloriesGoal) formData.append("calories_goal", caloriesGoal);
+    if (dietaryRestrictions) formData.append("dietary_restrictions", dietaryRestrictions);
     if (profilePicture) {
-      const uriParts = profilePicture.split('.');
+      const uriParts = profilePicture.split(".");
       const fileType = uriParts[uriParts.length - 1];
-      formData.append('profile_picture', {
+      formData.append("profile_picture", {
         uri: profilePicture,
         name: `profile_picture.${fileType}`,
         type: `image/${fileType}`,
@@ -69,21 +67,21 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
     try {
       const response = await axios.post(`${getBaseUrl()}/signup`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
       if (response.status === 200) {
-        Alert.alert('Success', 'User signed up successfully');
+        Alert.alert("Success", "User signed up successfully");
         onSignUp();
       }
     } catch (error) {
       if ((error as any).response && (error as any).response.data) {
-        const errorMessage = (error as any).response?.data?.message || 'Failed to sign up';
-        Alert.alert('Error', errorMessage);
+        const errorMessage = (error as any).response?.data?.message || "Failed to sign up";
+        Alert.alert("Error", errorMessage);
       } else {
-        Alert.alert('Error', 'Failed to sign up');
+        Alert.alert("Error", "Failed to sign up");
       }
-      console.error('Error signing up:', error);
+      console.error("Error signing up:", error);
     }
   };
 
@@ -97,32 +95,29 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
       });
 
       if (!result.canceled) {
-        const uriParts = result.assets[0].uri.split('.');
+        const uriParts = result.assets[0].uri.split(".");
         const fileType = uriParts[uriParts.length - 1].toLowerCase();
 
-        if (!['jpg', 'jpeg', 'png'].includes(fileType)) {
-          Alert.alert('Error', 'Only JPEG and PNG images are allowed.');
+        if (!["jpg", "jpeg", "png"].includes(fileType)) {
+          Alert.alert("Error", "Only JPEG and PNG images are allowed.");
           return;
         }
 
         if (result.assets[0].fileSize && result.assets[0].fileSize > 5 * 1024 * 1024) {
-          Alert.alert('Error', 'File size exceeds the limit of 5 MB.');
+          Alert.alert("Error", "File size exceeds the limit of 5 MB.");
           return;
         }
 
         setProfilePicture(result.assets[0].uri);
       }
     } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick an image.');
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick an image.");
     }
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={onNavigateToLogin}>
-        <Icon name="arrow-back" size={24} color="#000" />
-      </TouchableOpacity>
       <Text style={styles.title}>Sign Up</Text>
       <TextInput
         style={styles.input}
@@ -149,7 +144,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
           style={styles.showPasswordButton}
           onPress={() => setIsPasswordVisible(!isPasswordVisible)}
         >
-          <Text>{isPasswordVisible ? 'Hide' : 'Show'}</Text>
+          <Text>{isPasswordVisible ? "Hide" : "Show"}</Text>
         </TouchableOpacity>
       </View>
       <TextInput
@@ -169,13 +164,13 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onSignUp, onNavigateToLogin
         <Text style={styles.uploadButtonText}>Upload Profile Picture (optional)</Text>
       </TouchableOpacity>
       {profilePicture && (
-        <Image
-          source={{ uri: profilePicture }}
-          style={styles.profilePicture}
-        />
+        <Image source={{ uri: profilePicture }} style={styles.profilePicture} />
       )}
       <TouchableOpacity style={styles.button} onPress={handleSignUp}>
         <Text style={styles.buttonText}>Sign Up</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={onNavigateToLogin}>
+        <Text style={styles.buttonText}>Back</Text>
       </TouchableOpacity>
     </View>
   );
@@ -187,12 +182,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
-    width: "100%", // Ensure the container spans the full width
-  },
-  backButton: {
-    position: "absolute",
-    top: 40,
-    left: 20,
+    width: "100%",
   },
   title: {
     fontSize: 24,
@@ -201,7 +191,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    width: "100%", // Ensure the input spans the full width of the container
+    width: "100%",
     borderWidth: 1,
     borderColor: "#ccc",
     padding: 15,
@@ -212,7 +202,7 @@ const styles = StyleSheet.create({
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    width: "100%", // Ensure the password container spans the full width
+    width: "100%",
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
@@ -221,7 +211,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   passwordInput: {
-    flex: 1, // Allow the password input to take up available space
+    flex: 1,
     paddingVertical: 12,
     fontSize: 16,
   },
@@ -229,7 +219,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   uploadButton: {
-    width: "100%", // Ensure the button spans the full width
+    width: "100%",
     backgroundColor: "#007bff",
     padding: 15,
     borderRadius: 8,
@@ -250,11 +240,12 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
   },
   button: {
-    width: "100%", // Ensure the button spans the full width
+    width: "100%",
     backgroundColor: "#007bff",
     padding: 15,
     borderRadius: 8,
     alignItems: "center",
+    marginBottom: 10,
   },
   buttonText: {
     color: "#fff",

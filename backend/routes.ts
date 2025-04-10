@@ -336,7 +336,8 @@ router.get('/meals', authMiddleware, (req: Request, res: Response) => {
       meals.fat, 
       meals.created_at, 
       users.username AS userName,
-      COALESCE(AVG(reviews.rating), 0) AS averageRating -- Calculate the average rating
+      COALESCE(AVG(reviews.rating), 0) AS averageRating, -- Calculate the average rating
+      COUNT(reviews.review_id) AS reviewCount -- Count the number of reviews
     FROM meals
     INNER JOIN users ON meals.user_id = users.id
     LEFT JOIN reviews ON meals.id = reviews.meal_id -- Join with the reviews table
