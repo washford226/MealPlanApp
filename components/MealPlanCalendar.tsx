@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Button, Modal, TextInput, Alert } from "react-native";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
+import { useTheme } from "@/context/ThemeContext"; // Import ThemeContext
 
 type Meal = {
   name: string;
@@ -17,6 +18,11 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
   const [startDate, setStartDate] = useState(startOfWeek(today, { weekStartsOn: 0 }));
   const scrollViewRef = useRef<ScrollView>(null);
   const hasCenteredOnToday = useRef(false);
+
+  const { theme } = useTheme(); // Access the theme from ThemeContext
+
+  // Generate an array of days based on the number of weeks to show
+  const days = Array.from({ length: 7 * weeksToShow }, (_, i) => addDays(startDate, i));
 
   const mealColors = {
     Breakfast: "red",
@@ -39,7 +45,6 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
     }, { ...existingMeals });
   };
 
-  const days = Array.from({ length: weeksToShow * 7 }, (_, i) => addDays(startDate, i));
   const [meals, setMeals] = useState<Meals>(initializeMeals(days, {}));
   const [modalVisible, setModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -129,8 +134,14 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
   };
 
   return (
-    <View>
-      <Button title="Reset to Today" onPress={resetToToday} />
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.createMealButtonContainer}>
+        {/* Moved the Create Meal button to the top */}
+        <TouchableOpacity style={styles.createMealButton} onPress={onNavigateToCreateMeal}>
+          <Text style={styles.createMealButtonText}>Create Meal</Text>
+        </TouchableOpacity>
+      </View>
+      <Button title="Reset to Today" onPress={resetToToday} color={theme.button} />
       <ScrollView horizontal={true} style={styles.scrollView} ref={scrollViewRef}>
         <View style={styles.grid}>
           {days.map((day) => {
@@ -141,10 +152,14 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
             return (
               <View
                 key={day.toISOString()}
-                style={[styles.dayContainer, isToday && styles.todayContainer, { height: dayHeight }]}
+                style={StyleSheet.flatten([
+                  styles.dayContainer,
+                  isToday && styles.todayContainer,
+                  { height: dayHeight, borderColor: theme.text },
+                ])}
               >
-                <Text style={styles.dayName}>{format(day, "EEEE")}</Text>
-                <Text style={styles.date}>{format(day, "MM/dd")}</Text>
+                <Text style={[styles.dayName, { color: theme.text }]}>{format(day, "EEEE")}</Text>
+                <Text style={[styles.date, { color: theme.text }]}>{format(day, "MM/dd")}</Text>
                 <View style={styles.mealsContainer}>
                   {dayMeals.map((meal) => (
                     <TouchableOpacity
@@ -152,22 +167,17 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
                       style={[styles.meal, { backgroundColor: meal.color }]}
                       onPress={() => openEditModal(dayString, meal)}
                     >
-                      <Text style={styles.mealText}>{meal.name}</Text>
+                      <Text style={[styles.mealText, { color: theme.text }]}>{meal.name}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
-                <Button title="Add Meal" onPress={() => openModal(dayString)} />
+                <Button title="Add Meal" onPress={() => openModal(dayString)} color={theme.button} />
               </View>
             );
           })}
-          <Button title="Show More Days" onPress={showMoreDays} />
+          <Button title="Show More Days" onPress={showMoreDays} color={theme.button} />
         </View>
       </ScrollView>
-      <View style={styles.createMealButtonContainer}>
-        <TouchableOpacity style={styles.createMealButton} onPress={onNavigateToCreateMeal}>
-          <Text style={styles.createMealButtonText}>Create Meal</Text>
-        </TouchableOpacity>
-      </View>
       <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalView}>
           <Text style={styles.modalText}>Enter Meal Name:</Text>
@@ -205,6 +215,9 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
   },
@@ -243,8 +256,9 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   createMealButtonContainer: {
-    marginTop: 16,
     alignItems: "center",
+    marginVertical: 8, // Reduced margin to move it closer to the top
+    marginBottom: 16, // Ensure spacing from other elements
   },
   createMealButton: {
     backgroundColor: "#007BFF",

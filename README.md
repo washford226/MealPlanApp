@@ -11,13 +11,8 @@ This is a full-stack application for managing meal plans, including features lik
 Install the required dependencies for both the backend and frontend.
 
 ```bash
-# Install backend dependencies
+# Install dependencies
 npm install
-npm install express @types/express bcrypt jsonwebtoken mysql2 dotenv multer nodemailer
-
-# Install frontend dependencies
-npm install
-npm install react-native react-native-vector-icons axios @react-native-async-storage/async-storage react-navigation react-navigation-stack react-navigation-tabs
 ```
 
 #### 2. Set Up the Database
@@ -39,11 +34,13 @@ CREATE TABLE users (
     profile_picture BLOB DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+... -- (Check SQl file for all tables)
 ```
 
 #### 3. Configure Environment Variables
 
-Create a `.env` file in the `backend` directory with the following content:
+Make sure that the env file is correct with all of your data:
 
 ```
 DB_HOST=localhost
@@ -73,7 +70,9 @@ Navigate to the `frontend` directory and start the app:
 ```bash
 npx expo start
 ```
-
+Run on an Android emulator for the best experience. 
+If running on the web, please note that errors may not display properly and could cause the server to stop unexpectedly. 
+Exercise caution and ensure all inputs and actions are correct when using the web version.
 ---
 
 ### **Dependencies**

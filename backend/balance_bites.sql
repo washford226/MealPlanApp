@@ -36,7 +36,7 @@ CREATE TABLE Foods (
 
 -- Create the meals table
 CREATE TABLE IF NOT EXISTS meals (
-    id CHAR(36) PRIMARY KEY UNIQUE,
+    id INT AUTO_INCREMENT PRIMARY KEY UNIQUE,
     user_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS meals (
     protein INT NOT NULL,
     carbohydrates INT NOT NULL,
     fat INT NOT NULL,
+    visibility BOOLEAN DEFAULT TRUE, -- True for public, false for private
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -79,7 +80,7 @@ CREATE TABLE Portions (
 -- Create the reviews table
 CREATE TABLE Reviews (
     review_id INT PRIMARY KEY AUTO_INCREMENT, -- Unique identifier for each review
-    meal_id CHAR(36) NOT NULL, -- Foreign key to the meals table
+    meal_id INT NOT NULL, -- Foreign key to the meals table
     user_id INT NOT NULL, -- Foreign key to the users table
     rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5), -- Rating between 1 and 5
     comment TEXT DEFAULT NULL, -- Optional comment for the review
@@ -87,4 +88,13 @@ CREATE TABLE Reviews (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Timestamp for updates
     FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE, -- Cascade delete if the meal is deleted
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE -- Cascade delete if the user is deleted
+);
+
+-- Create the meal_plan table
+CREATE TABLE Meal_Plan (
+    meal_plan_id INT AUTO_INCREMENT PRIMARY KEY, -- Unique identifier for each entry
+    meal_id INT NOT NULL, -- Foreign key to the meals table
+    date DATE NOT NULL, -- The specific date the meal is planned for
+    meal_type ENUM('Breakfast', 'Lunch', 'Dinner', 'Other') NOT NULL, -- Type of meal
+    FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE -- Cascade delete if the meal is deleted
 );
