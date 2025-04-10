@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, TextInput, StyleSheet, Platform, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, TextInput, StyleSheet, Platform, Image, Switch } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -265,15 +265,16 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onLogout }) => {
         <Text style={{ color: theme.warning, marginTop: 20 }}>Delete Account</Text>
       </TouchableOpacity>
 
-      {/* Theme Toggle Button */}
-      <TouchableOpacity
-        style={[styles.themeButton, { backgroundColor: theme.button }]}
-        onPress={toggleTheme}
-      >
-        <Text style={[styles.themeButtonText, { color: theme.buttonText }]}>
-          Toggle {theme.background === '#000000' ? 'Light' : 'Dark'} Mode
-        </Text>
-      </TouchableOpacity>
+      {/* Dark Mode Slider */}
+      <View style={styles.row}>
+        <Text style={[styles.leftAlignText, { color: theme.text }]}>Dark Mode</Text>
+        <Switch
+          value={theme.background === '#000000'} // Check if the current theme is dark
+          onValueChange={toggleTheme} // Call toggleTheme to switch themes
+          trackColor={{ false: theme.border, true: theme.primary }}
+          thumbColor={theme.background === '#000000' ? theme.primary : theme.border}
+       />
+    </View>
     </View>
   );
 };
@@ -330,6 +331,8 @@ const styles = StyleSheet.create({
   },
   leftAlignText: {
     textAlign: 'left',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   editButton: {
     padding: 5,

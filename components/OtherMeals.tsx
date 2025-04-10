@@ -91,14 +91,19 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Search Bar */}
-      <TextInput
-        style={[styles.searchBar, { borderColor: theme.border, color: theme.text }]}
-        placeholder="Search meals..."
-        placeholderTextColor={theme.placeholder}
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
+      {/* Search Bar and Filter Button */}
+      <View style={styles.searchBarContainer}>
+        <TextInput
+          style={[styles.searchBar, { borderColor: theme.border, color: theme.text }]}
+          placeholder="Search meals..."
+          placeholderTextColor={theme.placeholder}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        <TouchableOpacity style={[styles.filterButton, { backgroundColor: theme.button }]}>
+          <Text style={[styles.filterButtonText, { color: theme.buttonText }]}>Filter</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Meals List */}
       <FlatList
@@ -131,13 +136,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  searchBarContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    margin: 16,
+  },
   searchBar: {
+    flex: 1,
     height: 40,
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 8,
-    margin: 16,
     fontSize: 16,
+  },
+  filterButton: {
+    marginLeft: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
   listContent: {
     padding: 16,

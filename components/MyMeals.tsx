@@ -78,19 +78,29 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <Text style={[styles.noMealsText, { color: theme.text }]}>No meals found.</Text>
+        {/* Add Meals Button */}
+        <TouchableOpacity style={[styles.addMealButton, { backgroundColor: theme.button }]}>
+          <Text style={[styles.addMealButtonText, { color: theme.buttonText }]}>Add Meals</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <TextInput
-        style={[styles.searchBar, { borderColor: theme.border, color: theme.text }]}
-        placeholder="Search meals..."
-        placeholderTextColor={theme.placeholder}
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
+      {/* Search Bar and Filter Button */}
+      <View style={styles.searchBarContainer}>
+        <TextInput
+          style={[styles.searchBar, { borderColor: theme.border, color: theme.text }]}
+          placeholder="Search meals..."
+          placeholderTextColor={theme.placeholder}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        <TouchableOpacity style={[styles.filterButton, { backgroundColor: theme.button }]}>
+          <Text style={[styles.filterButtonText, { color: theme.buttonText }]}>Filter</Text>
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={filteredMeals}
         keyExtractor={(item) => item.id.toString()}
@@ -104,6 +114,10 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
           </TouchableOpacity>
         )}
       />
+      {/* Add Meals Button */}
+      <TouchableOpacity style={[styles.addMealButton, { backgroundColor: theme.button }]}>
+        <Text style={[styles.addMealButtonText, { color: theme.buttonText }]}>Add Meals</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -112,13 +126,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    paddingBottom: 16, // Ensure content doesn't overlap with the navigation bar
+  },
+  searchBarContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
   },
   searchBar: {
+    flex: 1,
     height: 40,
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
-    marginBottom: 16,
+    fontSize: 16,
+  },
+  filterButton: {
+    marginLeft: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
   mealItem: {
     padding: 16,
@@ -141,6 +174,17 @@ const styles = StyleSheet.create({
   noMealsText: {
     fontSize: 16,
     textAlign: "center",
+  },
+  addMealButton: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 16,
+    marginBottom: 50, // Prevent overlap with the navigation bar
+  },
+  addMealButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
