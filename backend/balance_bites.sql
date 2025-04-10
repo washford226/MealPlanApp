@@ -98,3 +98,14 @@ CREATE TABLE Meal_Plan (
     meal_type ENUM('Breakfast', 'Lunch', 'Dinner', 'Other') NOT NULL, -- Type of meal
     FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE -- Cascade delete if the meal is deleted
 );
+
+CREATE TABLE IF NOT EXISTS REPORTS (
+    report_id INT AUTO_INCREMENT PRIMARY KEY UNIQUE,
+    user_id INT NOT NULL,
+    meal_id INT NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    status ENUM('Pending', 'Reviewed', 'Resolved') DEFAULT 'Pending', -- Track report status
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE
+);
