@@ -9,6 +9,7 @@ import OtherMeals from "@/components/OtherMeals";
 import MealDetails from "@/components/MealDetails";
 import CreateReview from "@/components/CreateReview";
 import ViewReviews from "@/components/ViewReviews";
+import CreateMealScreen from "@/components/CreateMealScreen";
 import MyMeals from "@/components/MyMeals";
 import MyMealInfo from "@/components/MyMealInfo";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -24,6 +25,7 @@ function Index() {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [isCreatingReview, setIsCreatingReview] = useState(false);
   const [isViewingReviews, setIsViewingReviews] = useState(false);
+  const [isCreatingMeal, setIsCreatingMeal] = useState(false);
 
   const handleLogin = () => setIsLoggedIn(true);
 
@@ -43,6 +45,7 @@ function Index() {
     setIsOtherMealsScreen(false);
     setIsMyMealsScreen(false);
     setSelectedMeal(null);
+    setIsCreatingMeal(false);
   };
 
   const handleNavigateToForgotPassword = () => setIsForgotPasswordScreen(true);
@@ -82,10 +85,19 @@ function Index() {
     setSelectedMeal(null);
   };
 
+  const handleNavigateToCreateMeal = () => {
+    setIsCreatingMeal(true);
+  };
+
   return (
     <View style={styles.container}>
       {isLoggedIn ? (
-        isCreatingReview && selectedMeal ? (
+        isCreatingMeal ? (
+          <CreateMealScreen
+            route={{ params: { selectedDay: "2023-04-07" } }} // Pass params explicitly
+            navigation={{ goBack: handleBackToCalendar }} // Mock navigation
+          />
+        ) : isCreatingReview && selectedMeal ? (
           <CreateReview
             meal={selectedMeal}
             onReviewSubmit={handleReviewSubmit}
@@ -178,7 +190,7 @@ function Index() {
           </>
         ) : (
           <View style={styles.calendarContainer}>
-            <MealPlanCalendar />
+            <MealPlanCalendar onNavigateToCreateMeal={handleNavigateToCreateMeal} />
             <View style={styles.bottomBar}>
               <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>
                 <Icon name="calendar" size={24} color="#000" />
@@ -225,17 +237,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "stretch",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
   },
   bottomBar: {
     flexDirection: "row",

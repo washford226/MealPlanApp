@@ -278,6 +278,47 @@ const buildUpdateQuery = (fields: Record<string, any>) => {
   return { query: fieldsToUpdate.join(', '), values };
 };
 
+// Create a new meal
+router.post("/meals", authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const { name, description, ingredients, calories, protein, carbohydrates, fat, visibility } = req.body.meal || {};
+  const user_id = req.user?.id;
+  const db = (req as any).db;
+
+  if (!user_id) {
+    res.status(401).send("User is not authenticated");
+    return;
+  }
+
+  if (!name || !description || !ingredients) {
+    res.status(400).send("Missing required fields");
+    return;
+  }
+
+  try {
+    const query = `
+      INSERT INTO meals (name, description, ingredients, calories, protein, carbohydrates, fat, visibility, user_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const values = [
+      name,
+      description,
+      JSON.stringify(ingredients),
+      calories,
+      protein,
+      carbohydrates,
+      fat,
+      visibility ?? true,
+      user_id,
+    ];
+    await db.query(query, values);
+    res.status(201).send("Meal added successfully");
+  } catch (err) {
+    console.error("Error adding meal:", err);
+    res.status(500).send("Error adding meal");
+  }
+});
+
+
 // Get all meals
 router.get('/meals', authMiddleware, (req: Request, res: Response) => {
   const db = (req as any).db;
