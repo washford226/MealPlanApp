@@ -34,20 +34,7 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
   };
 
   // Function to generate default meals for a day
-  const generateMeals = (): Meal[] => {
-    const mealColors = theme.mealColors || {
-      breakfast: "#ff6f61", // Default red for breakfast
-      lunch: "#4caf50", // Default green for lunch
-      dinner: "#2196f3", // Default blue for dinner
-      snack: "#9c27b0", // Default purple for snacks
-    };
-  
-    return [
-      { name: "Breakfast", color: mealColors.breakfast },
-      { name: "Lunch", color: mealColors.lunch },
-      { name: "Dinner", color: mealColors.dinner },
-    ];
-  };
+  // Removed duplicate declaration of generateMeals
   const mealColors = {
     Breakfast: "red",
     Lunch: "green",
