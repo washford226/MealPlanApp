@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Button, Modal, TextInput, Alert } from "react-native";
-import { format, startOfWeek, addDays, subWeeks, isSameDay } from "date-fns";
+import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { useTheme } from "@/context/ThemeContext"; // Import ThemeContext
 
-const MealPlanCalendar = () => {
+type Meal = {
+  name: string;
+  color: string;
+};
+
+type Meals = {
+  [key: string]: Meal[];
+};
+
+const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: () => void }) => {
   const today = new Date();
   const [weeksToShow, setWeeksToShow] = useState(1);
   const [startDate, setStartDate] = useState(startOfWeek(today, { weekStartsOn: 0 }));
@@ -15,15 +24,6 @@ const MealPlanCalendar = () => {
   // Generate an array of days based on the number of weeks to show
   const days = Array.from({ length: 7 * weeksToShow }, (_, i) => addDays(startDate, i));
 
-  type Meal = {
-    name: string;
-    color: string;
-  };
-
-  type Meals = {
-    [key: string]: Meal[];
-  };
-
   const mealColors = {
     Breakfast: "red",
     Lunch: "green",
@@ -31,14 +31,12 @@ const MealPlanCalendar = () => {
     Snack: "purple",
   };
 
-  // Function to generate default meals for a day
   const generateMeals = (): Meal[] => [
     { name: "Breakfast", color: mealColors.Breakfast },
     { name: "Lunch", color: mealColors.Lunch },
     { name: "Dinner", color: mealColors.Dinner },
   ];
 
-  // Function to initialize meals for the given days
   const initializeMeals = (days: Date[], existingMeals: Meals): Meals => {
     return days.reduce((acc, day) => {
       const dayString = format(day, "yyyy-MM-dd");
@@ -47,19 +45,17 @@ const MealPlanCalendar = () => {
     }, { ...existingMeals });
   };
 
-  const [meals, setMeals] = useState<Meals>(initializeMeals(days, {} as Meals));
+  const [meals, setMeals] = useState<Meals>(initializeMeals(days, {}));
   const [modalVisible, setModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [newMealName, setNewMealName] = useState("");
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
 
-  // Update meals when weeksToShow or startDate changes
   useEffect(() => {
     setMeals((prevMeals) => initializeMeals(days, prevMeals));
   }, [weeksToShow, startDate]);
 
-  // Scroll to the current date when the component mounts
   useEffect(() => {
     if (!hasCenteredOnToday.current) {
       const todayIndex = days.findIndex((day) => isSameDay(day, today));
@@ -68,9 +64,8 @@ const MealPlanCalendar = () => {
         hasCenteredOnToday.current = true;
       }
     }
-  }, [days]); // Dependency array includes days to ensure it runs when days change
+  }, [days]);
 
-  // Function to add a new meal
   const addMeal = () => {
     if (meals[selectedDay].some((meal) => meal.name === newMealName)) {
       Alert.alert("Error", "Meal name already exists for this day.");
@@ -85,13 +80,11 @@ const MealPlanCalendar = () => {
     setNewMealName("");
   };
 
-  // Function to open the modal for adding a meal
   const openModal = (day: string) => {
     setSelectedDay(day);
     setModalVisible(true);
   };
 
-  // Function to open the modal for editing a meal
   const openEditModal = (day: string, meal: Meal) => {
     setSelectedDay(day);
     setSelectedMeal(meal);
@@ -99,7 +92,6 @@ const MealPlanCalendar = () => {
     setEditModalVisible(true);
   };
 
-  // Function to delete a meal
   const deleteMeal = () => {
     if (selectedMeal) {
       setMeals((prevMeals) => ({
@@ -111,7 +103,6 @@ const MealPlanCalendar = () => {
     }
   };
 
-  // Function to rename a meal
   const renameMeal = () => {
     if (selectedMeal) {
       if (meals[selectedDay].some((meal) => meal.name === newMealName)) {
@@ -130,12 +121,10 @@ const MealPlanCalendar = () => {
     }
   };
 
-  // Function to show more days (add another week)
   const showMoreDays = () => {
     setWeeksToShow(weeksToShow + 1);
   };
 
-  // Function to reset to the current week
   const resetToToday = () => {
     setStartDate(startOfWeek(today, { weekStartsOn: 0 }));
     setWeeksToShow(1);
@@ -146,22 +135,28 @@ const MealPlanCalendar = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.createMealButtonContainer}>
+        {/* Moved the Create Meal button to the top */}
+        <TouchableOpacity style={styles.createMealButton} onPress={onNavigateToCreateMeal}>
+          <Text style={styles.createMealButtonText}>Create Meal</Text>
+        </TouchableOpacity>
+      </View>
       <Button title="Reset to Today" onPress={resetToToday} color={theme.button} />
       <ScrollView horizontal={true} style={styles.scrollView} ref={scrollViewRef}>
         <View style={styles.grid}>
-          {days.map((day, index) => {
+          {days.map((day) => {
             const dayString = format(day, "yyyy-MM-dd");
             const isToday = isSameDay(day, today);
             const dayMeals = meals[dayString] || [];
-            const dayHeight = 100 + dayMeals.length * 50; // Base height + additional height per meal
+            const dayHeight = 100 + dayMeals.length * 50;
             return (
               <View
                 key={day.toISOString()}
-                style={[
+                style={StyleSheet.flatten([
                   styles.dayContainer,
                   isToday && styles.todayContainer,
                   { height: dayHeight, borderColor: theme.text },
-                ]}
+                ])}
               >
                 <Text style={[styles.dayName, { color: theme.text }]}>{format(day, "EEEE")}</Text>
                 <Text style={[styles.date, { color: theme.text }]}>{format(day, "MM/dd")}</Text>
@@ -183,6 +178,38 @@ const MealPlanCalendar = () => {
           <Button title="Show More Days" onPress={showMoreDays} color={theme.button} />
         </View>
       </ScrollView>
+      <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalView}>
+          <Text style={styles.modalText}>Enter Meal Name:</Text>
+          <TextInput
+            style={styles.input}
+            onChangeText={setNewMealName}
+            value={newMealName}
+            placeholder="Meal Name"
+          />
+          <Button title="Add" onPress={addMeal} />
+          <Button title="Cancel" onPress={() => setModalVisible(false)} />
+        </View>
+      </Modal>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalView}>
+          <Text style={styles.modalText}>Edit Meal Name:</Text>
+          <TextInput
+            style={styles.input}
+            onChangeText={setNewMealName}
+            value={newMealName}
+            placeholder="Meal Name"
+          />
+          <Button title="Rename" onPress={renameMeal} />
+          <Button title="Delete" onPress={deleteMeal} />
+          <Button title="Cancel" onPress={() => setEditModalVisible(false)} />
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -202,12 +229,14 @@ const styles = StyleSheet.create({
     width: 100,
     padding: 8,
     borderWidth: 1,
+    borderColor: "#ddd",
     borderRadius: 8,
     alignItems: "center",
     marginRight: 16,
   },
   todayContainer: {
     borderWidth: 2,
+    borderColor: "black",
   },
   dayName: {
     fontWeight: "bold",
@@ -225,6 +254,48 @@ const styles = StyleSheet.create({
   },
   mealText: {
     color: "#fff",
+  },
+  createMealButtonContainer: {
+    alignItems: "center",
+    marginVertical: 8, // Reduced margin to move it closer to the top
+    marginBottom: 16, // Ensure spacing from other elements
+  },
+  createMealButton: {
+    backgroundColor: "#007BFF",
+    padding: 12,
+    borderRadius: 8,
+  },
+  createMealButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  input: {
+    height: 40,
+    borderColor: "gray",
+    borderWidth: 1,
+    marginBottom: 15,
+    paddingLeft: 10,
+    width: "80%",
   },
 });
 

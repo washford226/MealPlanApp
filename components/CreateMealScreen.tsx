@@ -68,6 +68,7 @@ const CreateMealScreen = ({ route, navigation }: any) => {
       <TextInput style={styles.input} placeholder="Protein (g)" value={mealProtein} onChangeText={setMealProtein} keyboardType="numeric" />
       <TextInput style={styles.input} placeholder="Carbs (g)" value={mealCarbohydrates} onChangeText={setMealCarbohydrates} keyboardType="numeric" />
       <TextInput style={styles.input} placeholder="Fat (g)" value={mealFat} onChangeText={setMealFat} keyboardType="numeric" />
+      <Button title="Create Meal" onPress={handleAddMeal} />
       <Button title="Add Meal" onPress={handleAddMeal} />
       <Button title="Cancel" onPress={() => navigation.goBack()} />
     </View>
