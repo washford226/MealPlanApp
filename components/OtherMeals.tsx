@@ -115,14 +115,19 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
               <Text style={[styles.mealName, { color: theme.text }]}>{item.name}</Text>
               <Text style={[styles.mealDescription, { color: theme.subtext }]}>{item.description}</Text>
               <Text style={[styles.mealUser, { color: theme.subtext }]}>By: {item.userName}</Text>
-              <StarRating
-                rating={Math.round(Math.min(Math.max(Number(item.averageRating || 0), 0), 5))}
-                maxStars={5}
-                starSize={20}
-                color={theme.starColor} // Use theme's starColor
-                enableSwiping={false}
-                onChange={() => {}}
-              />
+              <View style={styles.ratingContainer}>
+                <StarRating
+                  rating={Math.round(Math.min(Math.max(Number(item.averageRating || 0), 0), 5))}
+                  maxStars={5}
+                  starSize={20}
+                  color={theme.starColor} // Use theme's starColor
+                  enableSwiping={false}
+                  onChange={() => {}}
+                />
+                <Text style={[styles.reviewCount, { color: theme.subtext }]}>
+                  ({item.reviewCount} reviews)
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
         )}
@@ -178,6 +183,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   mealUser: {
+    fontSize: 12,
+  },
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  reviewCount: {
+    marginLeft: 8,
     fontSize: 12,
   },
   loadingText: {

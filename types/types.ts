@@ -10,4 +10,5 @@ export interface Meal {
     ingredients: string;
     visibility: boolean; // Added visibility property
     averageRating: number;
+    reviewCount?: number;
   }
