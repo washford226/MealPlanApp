@@ -1,19 +1,19 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, Button, Alert, Platform, Switch } from "react-native";
+import { View, Text, StyleSheet, TextInput, Alert, Platform, Switch, TouchableOpacity } from "react-native";
 import { Meal } from "@/types/types";
-import { useTheme } from "@/context/ThemeContext"; // Import the ThemeContext
+import { useTheme } from "@/context/ThemeContext";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface MyMealInfoProps {
-  meal: Meal; // The selected meal
-  onBack: () => void; // Callback to navigate back
+  meal: Meal;
+  onBack: () => void;
 }
 
 const BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
 
 const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
-  const { theme } = useTheme(); // Access the current theme
+  const { theme } = useTheme();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedMeal, setEditedMeal] = useState<Meal>({ ...meal });
@@ -58,7 +58,7 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
 
       if (response.status === 200) {
         Alert.alert("Success", "Meal deleted successfully!");
-        onBack(); // Navigate back after deletion
+        onBack();
       }
     } catch (error) {
       console.error("Error deleting meal:", error);
@@ -147,8 +147,18 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
               thumbColor={editedMeal.visibility ? theme.primary : theme.border}
             />
           </View>
-          <Button title="Save" onPress={handleSave} color={theme.button} />
-          <Button title="Cancel" onPress={() => setIsEditing(false)} color={theme.danger} />
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: theme.button }]}
+            onPress={handleSave}
+          >
+            <Text style={[styles.buttonText, { color: theme.buttonText }]}>Save</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: theme.danger }]}
+            onPress={() => setIsEditing(false)}
+          >
+            <Text style={[styles.buttonText, { color: theme.buttonText }]}>Cancel</Text>
+          </TouchableOpacity>
         </>
       ) : (
         <>
@@ -162,9 +172,24 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
           <Text style={[styles.details, { color: theme.text }]}>
             Visibility: {meal.visibility ? "Public" : "Private"}
           </Text>
-          <Button title="Edit Meal" onPress={() => setIsEditing(true)} color={theme.button} />
-          <Button title="Delete Meal" onPress={confirmDelete} color={theme.danger} />
-          <Button title="Back to My Meals" onPress={onBack} color={theme.button} />
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: theme.button }]}
+            onPress={() => setIsEditing(true)}
+          >
+            <Text style={[styles.buttonText, { color: theme.buttonText }]}>Edit Meal</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: theme.danger }]}
+            onPress={confirmDelete}
+          >
+            <Text style={[styles.buttonText, { color: theme.buttonText }]}>Delete Meal</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: theme.button }]}
+            onPress={onBack}
+          >
+            <Text style={[styles.buttonText, { color: theme.buttonText }]}>Back to My Meals</Text>
+          </TouchableOpacity>
         </>
       )}
     </View>
@@ -211,6 +236,16 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 16,
     marginRight: 8,
+  },
+  button: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
