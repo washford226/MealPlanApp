@@ -6,6 +6,11 @@ const lightTheme = {
   text: '#000000',
   button: '#007bff',
   buttonText: '#ffffff',
+  border: '#cccccc', // Light gray for borders
+  placeholder: '#888888', // Gray for placeholder text
+  card: '#f8f9fa', // Light card background
+  subtext: '#6c757d', // Muted text color
+  primary: '#007bff', // Primary color for highlights or loading indicators
 };
 
 const darkTheme = {
@@ -13,6 +18,11 @@ const darkTheme = {
   text: '#ffffff',
   button: '#444444',
   buttonText: '#ffffff',
+  border: '#444444', // Dark gray for borders
+  placeholder: '#aaaaaa', // Light gray for placeholder text
+  card: '#1c1c1e', // Dark card background
+  subtext: '#aaaaaa', // Muted text color
+  primary: '#1e90ff', // Primary color for highlights or loading indicators
 };
 
 const ThemeContext = createContext({
