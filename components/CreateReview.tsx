@@ -66,14 +66,14 @@ const CreateReview: React.FC<CreateReviewProps> = ({ meal, onReviewSubmit, onCan
         onChange={setRating}
         maxStars={5}
         starSize={30}
-        color="#FFD700" // Gold color for stars
+        color={theme.starColor} // Use theme's starColor
       />
 
       {/* Comment Input */}
       <TextInput
-        style={[styles.input, styles.commentInput, { borderColor: theme.text, color: theme.text }]}
+        style={[styles.input, styles.commentInput, { borderColor: theme.border, color: theme.text }]}
         placeholder="Enter a comment (optional)"
-        placeholderTextColor={theme.text}
+        placeholderTextColor={theme.placeholder}
         multiline
         value={comment}
         onChangeText={setComment}
@@ -91,7 +91,7 @@ const CreateReview: React.FC<CreateReviewProps> = ({ meal, onReviewSubmit, onCan
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.cancelButton, { backgroundColor: theme.background, borderColor: theme.text }]}
+          style={[styles.cancelButton, { backgroundColor: theme.background, borderColor: theme.border }]}
           onPress={onCancel}
         >
           <Text style={[styles.cancelButtonText, { color: theme.text }]}>Cancel</Text>

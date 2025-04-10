@@ -12,6 +12,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Meal } from "@/types/types";
+import StarRating from "react-native-star-rating-widget"; // Import the star rating widget
 import { useTheme } from "@/context/ThemeContext"; // Import ThemeContext
 
 interface Review {
@@ -65,7 +66,7 @@ const ViewReviews: React.FC<ViewReviewsProps> = ({ meal, onBack }) => {
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.text} />
+        <ActivityIndicator size="large" color={theme.primary} />
         <Text style={[styles.loadingText, { color: theme.text }]}>Loading reviews...</Text>
       </View>
     );
@@ -94,13 +95,18 @@ const ViewReviews: React.FC<ViewReviewsProps> = ({ meal, onBack }) => {
         data={reviews}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={[styles.reviewItem, { backgroundColor: theme.button }]}>
-            <Text style={[styles.userName, { color: theme.buttonText }]}>{item.userName}</Text>
-            <Text style={[styles.rating, { color: theme.buttonText }]}>
-              Rating: {item.rating}/5
-            </Text>
-            <Text style={[styles.comment, { color: theme.buttonText }]}>{item.comment}</Text>
-            <Text style={[styles.date, { color: theme.buttonText }]}>
+          <View style={[styles.reviewItem, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.userName, { color: theme.text }]}>{item.userName}</Text>
+            <StarRating
+              rating={item.rating}
+              maxStars={5}
+              starSize={20}
+              color={theme.starColor} // Use theme's starColor
+              enableSwiping={false} // Disable swiping for static display
+              onChange={() => {}} // No-op since this is read-only
+            />
+            <Text style={[styles.comment, { color: theme.subtext }]}>{item.comment}</Text>
+            <Text style={[styles.date, { color: theme.subtext }]}>
               Reviewed on: {new Date(item.created_at).toLocaleDateString()}
             </Text>
           </View>
@@ -139,10 +145,6 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 4,
-  },
-  rating: {
-    fontSize: 14,
     marginBottom: 4,
   },
   comment: {

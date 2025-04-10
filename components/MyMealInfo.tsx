@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, Button, Alert, Platform } from "react-native";
+import { View, Text, StyleSheet, TextInput, Button, Alert, Platform, Switch } from "react-native";
 import { Meal } from "@/types/types";
 import { useTheme } from "@/context/ThemeContext"; // Import the ThemeContext
 import axios from "axios";
@@ -66,6 +66,17 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
     }
   };
 
+  const confirmDelete = () => {
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to delete this meal? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: handleDelete },
+      ]
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {isEditing ? (
@@ -127,8 +138,17 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
             placeholderTextColor={theme.placeholder}
             keyboardType="numeric"
           />
+          <View style={styles.switchContainer}>
+            <Text style={[styles.switchLabel, { color: theme.text }]}>Visibility:</Text>
+            <Switch
+              value={editedMeal.visibility}
+              onValueChange={(value) => setEditedMeal({ ...editedMeal, visibility: value })}
+              trackColor={{ false: theme.border, true: theme.primary }}
+              thumbColor={editedMeal.visibility ? theme.primary : theme.border}
+            />
+          </View>
           <Button title="Save" onPress={handleSave} color={theme.button} />
-          <Button title="Cancel" onPress={() => setIsEditing(false)} color="red" />
+          <Button title="Cancel" onPress={() => setIsEditing(false)} color={theme.danger} />
         </>
       ) : (
         <>
@@ -139,8 +159,11 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
           <Text style={[styles.details, { color: theme.text }]}>Protein: {meal.protein}g</Text>
           <Text style={[styles.details, { color: theme.text }]}>Carbs: {meal.carbohydrates}g</Text>
           <Text style={[styles.details, { color: theme.text }]}>Fat: {meal.fat}g</Text>
+          <Text style={[styles.details, { color: theme.text }]}>
+            Visibility: {meal.visibility ? "Public" : "Private"}
+          </Text>
           <Button title="Edit Meal" onPress={() => setIsEditing(true)} color={theme.button} />
-          <Button title="Delete Meal" onPress={handleDelete} color="red" />
+          <Button title="Delete Meal" onPress={confirmDelete} color={theme.danger} />
           <Button title="Back to My Meals" onPress={onBack} color={theme.button} />
         </>
       )}
@@ -179,6 +202,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     height: 100,
     textAlignVertical: "top",
+  },
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  switchLabel: {
+    fontSize: 16,
+    marginRight: 8,
   },
 });
 

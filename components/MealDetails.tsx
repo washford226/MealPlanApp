@@ -59,7 +59,7 @@ const MealDetails: React.FC<MealDetailsProps> = ({ meal, onBack, onAddReview, on
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Text style={[styles.title, { color: theme.text }]}>{meal.name}</Text>
-      <Text style={[styles.description, { color: theme.text }]}>{meal.description}</Text>
+      <Text style={[styles.description, { color: theme.subtext }]}>{meal.description}</Text>
       <Text style={[styles.sectionTitle, { color: theme.text }]}>Ingredients:</Text>
       <Text style={[styles.ingredients, { color: theme.text }]}>{meal.ingredients}</Text>
       <Text style={[styles.sectionTitle, { color: theme.text }]}>Nutritional Information:</Text>
@@ -67,7 +67,7 @@ const MealDetails: React.FC<MealDetailsProps> = ({ meal, onBack, onAddReview, on
       <Text style={[styles.nutrition, { color: theme.text }]}>Protein: {meal.protein}g</Text>
       <Text style={[styles.nutrition, { color: theme.text }]}>Carbohydrates: {meal.carbohydrates}g</Text>
       <Text style={[styles.nutrition, { color: theme.text }]}>Fat: {meal.fat}g</Text>
-      <Text style={[styles.user, { color: theme.text }]}>Created by: {meal.userName}</Text>
+      <Text style={[styles.user, { color: theme.subtext }]}>Created by: {meal.userName}</Text>
 
       {/* Add Review Button */}
       <TouchableOpacity

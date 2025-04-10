@@ -11,6 +11,16 @@ const lightTheme = {
   card: '#f8f9fa', // Light card background
   subtext: '#6c757d', // Muted text color
   primary: '#007bff', // Primary color for highlights or loading indicators
+  danger: '#dc3545', // Red for destructive actions like delete or cancel
+  warning: '#ffc107', // Yellow for less critical actions like warnings
+  starColor: '#FFD700', // Gold for star ratings
+  mealColors: { // Colors for different meal types
+    breakfast: '#ff6f61', // Red for breakfast
+    lunch: '#4caf50', // Green for lunch
+    dinner: '#2196f3', // Blue for dinner
+    snack: '#9c27b0', // Purple for snacks
+  },
+  mealText: '#ffffff', // White text for meal blocks
 };
 
 const darkTheme = {
@@ -23,6 +33,16 @@ const darkTheme = {
   card: '#1c1c1e', // Dark card background
   subtext: '#aaaaaa', // Muted text color
   primary: '#1e90ff', // Primary color for highlights or loading indicators
+  danger: '#ff4d4f', // Bright red for destructive actions
+  warning: '#ffcc00', // Yellow for less critical actions
+  starColor: '#FFD700', // Gold for star ratings
+  mealColors: { // Colors for different meal types
+    breakfast: '#ff6f61', // Red for breakfast
+    lunch: '#4caf50', // Green for lunch
+    dinner: '#2196f3', // Blue for dinner
+    snack: '#9c27b0', // Purple for snacks
+  },
+  mealText: '#ffffff', // White text for meal blocks
 };
 
 const ThemeContext = createContext({

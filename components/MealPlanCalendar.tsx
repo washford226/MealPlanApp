@@ -24,6 +24,30 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
   // Generate an array of days based on the number of weeks to show
   const days = Array.from({ length: 7 * weeksToShow }, (_, i) => addDays(startDate, i));
 
+  type Meal = {
+    name: string;
+    color: string;
+  };
+
+  type Meals = {
+    [key: string]: Meal[];
+  };
+
+  // Function to generate default meals for a day
+  const generateMeals = (): Meal[] => {
+    const mealColors = theme.mealColors || {
+      breakfast: "#ff6f61", // Default red for breakfast
+      lunch: "#4caf50", // Default green for lunch
+      dinner: "#2196f3", // Default blue for dinner
+      snack: "#9c27b0", // Default purple for snacks
+    };
+  
+    return [
+      { name: "Breakfast", color: mealColors.breakfast },
+      { name: "Lunch", color: mealColors.lunch },
+      { name: "Dinner", color: mealColors.dinner },
+    ];
+  };
   const mealColors = {
     Breakfast: "red",
     Lunch: "green",
@@ -71,7 +95,7 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
       Alert.alert("Error", "Meal name already exists for this day.");
       return;
     }
-    const newMeal: Meal = { name: newMealName, color: mealColors.Snack };
+    const newMeal: Meal = { name: newMealName, color: theme.mealColors.snack };
     setMeals((prevMeals) => ({
       ...prevMeals,
       [selectedDay]: [...prevMeals[selectedDay], newMeal],
@@ -159,7 +183,7 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
                 ])}
               >
                 <Text style={[styles.dayName, { color: theme.text }]}>{format(day, "EEEE")}</Text>
-                <Text style={[styles.date, { color: theme.text }]}>{format(day, "MM/dd")}</Text>
+                <Text style={[styles.date, { color: theme.subtext }]}>{format(day, "MM/dd")}</Text>
                 <View style={styles.mealsContainer}>
                   {dayMeals.map((meal) => (
                     <TouchableOpacity
@@ -167,7 +191,7 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
                       style={[styles.meal, { backgroundColor: meal.color }]}
                       onPress={() => openEditModal(dayString, meal)}
                     >
-                      <Text style={[styles.mealText, { color: theme.text }]}>{meal.name}</Text>
+                      <Text style={[styles.mealText, { color: theme.mealText }]}>{meal.name}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -242,7 +266,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   date: {
-    color: "#888",
+    marginTop: 4,
   },
   mealsContainer: {
     marginTop: 8,
@@ -253,7 +277,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   mealText: {
-    color: "#fff",
+    fontSize: 14,
   },
   createMealButtonContainer: {
     alignItems: "center",
