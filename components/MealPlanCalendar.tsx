@@ -1,278 +1,135 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Button, Modal, TextInput, Alert } from "react-native";
-import { format, startOfWeek, addDays, isSameDay } from "date-fns";
-import { useTheme } from "@/context/ThemeContext"; // Import ThemeContext
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView } from "react-native";
+import { format, startOfWeek, addDays } from "date-fns";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type Meal = {
   name: string;
-  color: string;
+  description: string;
+  calories: number;
+  protein: number;
+  carbohydrates: number;
+  fat: number;
 };
 
-type Meals = {
-  [key: string]: Meal[];
-};
+const BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
 
 const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: () => void }) => {
   const today = new Date();
-  const [weeksToShow, setWeeksToShow] = useState(1);
-  const [startDate, setStartDate] = useState(startOfWeek(today, { weekStartsOn: 0 }));
-  const scrollViewRef = useRef<ScrollView>(null);
-  const hasCenteredOnToday = useRef(false);
+  const [weekOffset, setWeekOffset] = useState(0); // State to track the current week offset
+  const [meals, setMeals] = useState<{ [key: string]: Meal[] }>({}); // State to store meals for the weeks
 
-  const { theme } = useTheme(); // Access the theme from ThemeContext
+  const startOfCurrentWeek = startOfWeek(today, { weekStartsOn: 0 }); // Week starts on Sunday
 
-  // Generate an array of days based on the number of weeks to show
-  const days = Array.from({ length: 7 * weeksToShow }, (_, i) => addDays(startDate, i));
-
-  type Meal = {
-    name: string;
-    color: string;
-  };
-
-  type Meals = {
-    [key: string]: Meal[];
-  };
-
-  // Function to generate default meals for a day
-  // Removed duplicate declaration of generateMeals
-  const mealColors = {
-    Breakfast: "red",
-    Lunch: "green",
-    Dinner: "blue",
-    Snack: "purple",
-  };
-
-  const generateMeals = (): Meal[] => [
-    { name: "Breakfast", color: mealColors.Breakfast },
-    { name: "Lunch", color: mealColors.Lunch },
-    { name: "Dinner", color: mealColors.Dinner },
-  ];
-
-  const initializeMeals = (days: Date[], existingMeals: Meals): Meals => {
-    return days.reduce((acc, day) => {
-      const dayString = format(day, "yyyy-MM-dd");
-      acc[dayString] = existingMeals[dayString] || generateMeals();
-      return acc;
-    }, { ...existingMeals });
-  };
-
-  const [meals, setMeals] = useState<Meals>(initializeMeals(days, {}));
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [newMealName, setNewMealName] = useState("");
-  const [selectedDay, setSelectedDay] = useState("");
-  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
-
-  useEffect(() => {
-    setMeals((prevMeals) => initializeMeals(days, prevMeals));
-  }, [weeksToShow, startDate]);
-
-  useEffect(() => {
-    if (!hasCenteredOnToday.current) {
-      const todayIndex = days.findIndex((day) => isSameDay(day, today));
-      if (todayIndex !== -1 && scrollViewRef.current) {
-        scrollViewRef.current.scrollTo({ x: todayIndex * 116, animated: true });
-        hasCenteredOnToday.current = true;
+  // Fetch meals for a specific date
+  const fetchMealsForDate = async (date: string) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Error", "You are not logged in. Please log in to view your meals.");
+        return [];
       }
-    }
-  }, [days]);
 
-  const addMeal = () => {
-    if (meals[selectedDay].some((meal) => meal.name === newMealName)) {
-      Alert.alert("Error", "Meal name already exists for this day.");
-      return;
-    }
-    const newMeal: Meal = { name: newMealName, color: theme.mealColors.snack };
-    setMeals((prevMeals) => ({
-      ...prevMeals,
-      [selectedDay]: [...prevMeals[selectedDay], newMeal],
-    }));
-    setModalVisible(false);
-    setNewMealName("");
-  };
+      const response = await axios.get(`${BASE_URL}/meal-plan`, {
+        params: { date },
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  const openModal = (day: string) => {
-    setSelectedDay(day);
-    setModalVisible(true);
-  };
-
-  const openEditModal = (day: string, meal: Meal) => {
-    setSelectedDay(day);
-    setSelectedMeal(meal);
-    setNewMealName(meal.name);
-    setEditModalVisible(true);
-  };
-
-  const deleteMeal = () => {
-    if (selectedMeal) {
-      setMeals((prevMeals) => ({
-        ...prevMeals,
-        [selectedDay]: prevMeals[selectedDay].filter((meal) => meal.name !== selectedMeal.name),
-      }));
-      setEditModalVisible(false);
-      setSelectedMeal(null);
-    }
-  };
-
-  const renameMeal = () => {
-    if (selectedMeal) {
-      if (meals[selectedDay].some((meal) => meal.name === newMealName)) {
-        Alert.alert("Error", "Meal name already exists for this day.");
-        return;
+      if (response.data && Array.isArray(response.data)) {
+        return response.data;
+      } else {
+        console.warn(`Unexpected response for date (${date}):`, response.data);
+        return [];
       }
-      setMeals((prevMeals) => ({
-        ...prevMeals,
-        [selectedDay]: prevMeals[selectedDay].map((meal) =>
-          meal.name === selectedMeal.name ? { ...meal, name: newMealName } : meal
-        ),
-      }));
-      setEditModalVisible(false);
-      setSelectedMeal(null);
-      setNewMealName("");
+    } catch (error) {
+      console.error(`Error fetching meals for date (${date}):`, error);
+      return [];
     }
   };
 
-  const showMoreDays = () => {
-    setWeeksToShow(weeksToShow + 1);
+  // Fetch meals for a specific week
+  const fetchMealsForWeek = async (weekStartDate: Date) => {
+    const newMeals: { [key: string]: Meal[] } = {};
+    for (let i = 0; i < 7; i++) {
+      const currentDate = addDays(weekStartDate, i);
+      const currentDateString = format(currentDate, "yyyy-MM-dd");
+      const mealsForDate = await fetchMealsForDate(currentDateString);
+      newMeals[currentDateString] = mealsForDate;
+    }
+    setMeals((prevMeals) => ({ ...prevMeals, ...newMeals })); // Append new meals to the existing state
   };
 
-  const resetToToday = () => {
-    setStartDate(startOfWeek(today, { weekStartsOn: 0 }));
-    setWeeksToShow(1);
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ x: 0, animated: true });
-    }
+  // Fetch meals for the current week on initial render
+  useEffect(() => {
+    fetchMealsForWeek(startOfCurrentWeek);
+  }, []);
+
+  const handleMealPress = (meal: Meal) => {
+    Alert.alert("Meal Selected", `You selected ${meal.name}`);
+  };
+
+  const handleNextWeek = () => {
+    const nextWeekStartDate = addDays(startOfCurrentWeek, (weekOffset + 1) * 7);
+    setWeekOffset((prevOffset) => prevOffset + 1); // Increment the week offset
+    fetchMealsForWeek(nextWeekStartDate); // Fetch meals for the next week
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={styles.outerContainer}>
+      {/* Create Meal Button */}
       <View style={styles.createMealButtonContainer}>
-        {/* Moved the Create Meal button to the top */}
         <TouchableOpacity style={styles.createMealButton} onPress={onNavigateToCreateMeal}>
           <Text style={styles.createMealButtonText}>Create Meal</Text>
         </TouchableOpacity>
       </View>
-      <Button title="Reset to Today" onPress={resetToToday} color={theme.button} />
-      <ScrollView horizontal={true} style={styles.scrollView} ref={scrollViewRef}>
-        <View style={styles.grid}>
-          {days.map((day) => {
-            const dayString = format(day, "yyyy-MM-dd");
-            const isToday = isSameDay(day, today);
-            const dayMeals = meals[dayString] || [];
-            const dayHeight = 100 + dayMeals.length * 50;
+      <ScrollView horizontal={true} style={styles.scrollView}>
+        <View style={styles.container}>
+          {/* Display meals for all weeks */}
+          {Object.keys(meals).map((dateString) => {
+            const currentDate = new Date(dateString);
             return (
-              <View
-                key={day.toISOString()}
-                style={StyleSheet.flatten([
-                  styles.dayContainer,
-                  isToday && styles.todayContainer,
-                  { height: dayHeight, borderColor: theme.text },
-                ])}
-              >
-                <Text style={[styles.dayName, { color: theme.text }]}>{format(day, "EEEE")}</Text>
-                <Text style={[styles.date, { color: theme.subtext }]}>{format(day, "MM/dd")}</Text>
+              <View key={dateString} style={styles.dayContainer}>
+                <Text style={styles.dateLabel}>{format(currentDate, "EEEE, MMMM d")}</Text>
                 <View style={styles.mealsContainer}>
-                  {dayMeals.map((meal) => (
-                    <TouchableOpacity
-                      key={meal.name}
-                      style={[styles.meal, { backgroundColor: meal.color }]}
-                      onPress={() => openEditModal(dayString, meal)}
-                    >
-                      <Text style={[styles.mealText, { color: theme.mealText }]}>{meal.name}</Text>
-                    </TouchableOpacity>
-                  ))}
+                  {meals[dateString]?.length > 0 ? (
+                    meals[dateString].map((meal, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.mealButton}
+                        onPress={() => handleMealPress(meal)}
+                      >
+                        <Text style={styles.mealText}>{meal.name}</Text>
+                      </TouchableOpacity>
+                    ))
+                  ) : (
+                    <Text style={styles.noMealText}>No meals for this day</Text>
+                  )}
                 </View>
-                <Button title="Add Meal" onPress={() => openModal(dayString)} color={theme.button} />
               </View>
             );
           })}
-          <Button title="Show More Days" onPress={showMoreDays} color={theme.button} />
+          {/* Button to display the next week */}
+          <TouchableOpacity style={styles.nextWeekButton} onPress={handleNextWeek}>
+            <Text style={styles.nextWeekButtonText}>Next Week</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
-      <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalView}>
-          <Text style={styles.modalText}>Enter Meal Name:</Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={setNewMealName}
-            value={newMealName}
-            placeholder="Meal Name"
-          />
-          <Button title="Add" onPress={addMeal} />
-          <Button title="Cancel" onPress={() => setModalVisible(false)} />
-        </View>
-      </Modal>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={editModalVisible}
-        onRequestClose={() => setEditModalVisible(false)}
-      >
-        <View style={styles.modalView}>
-          <Text style={styles.modalText}>Edit Meal Name:</Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={setNewMealName}
-            value={newMealName}
-            placeholder="Meal Name"
-          />
-          <Button title="Rename" onPress={renameMeal} />
-          <Button title="Delete" onPress={deleteMeal} />
-          <Button title="Cancel" onPress={() => setEditModalVisible(false)} />
-        </View>
-      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  outerContainer: {
     flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  grid: {
-    flexDirection: "row",
-    padding: 16,
-  },
-  dayContainer: {
-    width: 100,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    alignItems: "center",
-    marginRight: 16,
-  },
-  todayContainer: {
-    borderWidth: 2,
-    borderColor: "black",
-  },
-  dayName: {
-    fontWeight: "bold",
-  },
-  date: {
-    marginTop: 4,
-  },
-  mealsContainer: {
-    marginTop: 8,
-  },
-  meal: {
-    padding: 8,
-    borderRadius: 4,
-    marginBottom: 4,
-  },
-  mealText: {
-    fontSize: 14,
+    backgroundColor: "#fff",
   },
   createMealButtonContainer: {
     alignItems: "center",
-    marginVertical: 8, // Reduced margin to move it closer to the top
-    marginBottom: 16, // Ensure spacing from other elements
+    marginVertical: 16,
   },
   createMealButton: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#28a745",
     padding: 12,
     borderRadius: 8,
   },
@@ -281,32 +138,56 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  modalView: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 35,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+  scrollView: {
+    flex: 1,
   },
-  modalText: {
-    marginBottom: 15,
+  container: {
+    flexDirection: "row", // Arrange days horizontally
+    padding: 16,
+  },
+  dayContainer: {
+    width: 150, // Set a fixed width for each day
+    marginRight: 16,
+  },
+  dateLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 8,
     textAlign: "center",
   },
-  input: {
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    marginBottom: 15,
-    paddingLeft: 10,
-    width: "80%",
+  mealsContainer: {
+    marginTop: 8,
+  },
+  mealButton: {
+    backgroundColor: "#f0f0f0",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  mealText: {
+    fontSize: 14,
+    textAlign: "center",
+  },
+  noMealText: {
+    fontSize: 12,
+    fontStyle: "italic",
+    color: "#888",
+    textAlign: "center",
+  },
+  nextWeekButton: {
+    backgroundColor: "#007BFF",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    width: 150, // Match the width of day containers
+    height: 100, // Match the height of day containers
+  },
+  nextWeekButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
 

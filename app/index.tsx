@@ -190,7 +190,9 @@ function Index() {
           </>
         ) : (
           <View style={styles.calendarContainer}>
-            <MealPlanCalendar onNavigateToCreateMeal={handleNavigateToCreateMeal} />
+            <MealPlanCalendar 
+               onNavigateToCreateMeal={handleNavigateToCreateMeal} 
+              />
             <View style={styles.bottomBar}>
               <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>
                 <Icon name="calendar" size={24} color="#000" />
