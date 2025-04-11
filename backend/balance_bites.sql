@@ -94,9 +94,11 @@ CREATE TABLE Reviews (
 CREATE TABLE Meal_Plan (
     meal_plan_id INT AUTO_INCREMENT PRIMARY KEY, -- Unique identifier for each entry
     meal_id INT NOT NULL, -- Foreign key to the meals table
+    user_id INT NOT NULL, -- Foreign key to the users table
     date DATE NOT NULL, -- The specific date the meal is planned for
     meal_type ENUM('Breakfast', 'Lunch', 'Dinner', 'Other') NOT NULL, -- Type of meal
     FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE -- Cascade delete if the meal is deleted
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE -- Cascade delete if the user is deleted
 );
 
 CREATE TABLE IF NOT EXISTS REPORTS (
