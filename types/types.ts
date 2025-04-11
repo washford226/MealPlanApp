@@ -11,4 +11,5 @@ export interface Meal {
     visibility: boolean; // Added visibility property
     averageRating: number;
     reviewCount?: number;
+    meal_type: "Breakfast" | "Lunch" | "Dinner" | "Other";
   }
