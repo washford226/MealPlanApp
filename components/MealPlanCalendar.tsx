@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView, Modal } from "react-native";
 import { format, startOfWeek, addDays } from "date-fns";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -8,14 +8,17 @@ import { Meal } from "@/types/types";
 type MealPlanCalendarProps = {
   onMealSelect: (meal: Meal) => void; // Callback for selecting a meal
   onNavigateToCreateMeal: () => void;
+  onNavigateToAddMeal: (date: string) => void; // Callback to navigate to the "Add Meal" screen
 };
 
 const BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
 
-const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNavigateToCreateMeal }) => {
+const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNavigateToCreateMeal, onNavigateToAddMeal }) => {
   const today = new Date();
   const [daysToShow, setDaysToShow] = useState(7); // Start with 7 days
   const [meals, setMeals] = useState<{ [key: string]: Meal[] }>({});
+  const [selectedDate, setSelectedDate] = useState<string | null>(null); // Track the selected date
+  const [isModalVisible, setIsModalVisible] = useState(false); // Control modal visibility
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Calculate the start of the current week (Sunday)
@@ -57,6 +60,31 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
     setMeals((prevMeals) => ({ ...prevMeals, ...newMeals }));
   };
 
+  const deleteAllMealsForDate = async (date: string) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Error", "You are not logged in. Please log in to delete meals.");
+        return;
+      }
+
+      await axios.delete(`${BASE_URL}/meal-plan-clear`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { date },
+      });
+
+      Alert.alert("Success", `All meals for ${date} have been deleted.`);
+      setMeals((prevMeals) => {
+        const updatedMeals = { ...prevMeals };
+        delete updatedMeals[date];
+        return updatedMeals;
+      });
+    } catch (error) {
+      console.error("Error deleting meals for date:", error);
+      Alert.alert("Error", "Failed to delete meals for the selected date. Please try again.");
+    }
+  };
+
   useEffect(() => {
     fetchMealsForWeek(startOfCurrentWeek);
 
@@ -66,8 +94,23 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
     }
   }, [daysToShow]);
 
-  const handleMealPress = (meal: Meal) => {
-    onMealSelect(meal); // Call the onMealSelect callback with the selected meal
+  const handleDatePress = (date: string) => {
+    setSelectedDate(date);
+    setIsModalVisible(true); // Show the modal with options
+  };
+
+  const handleAddMeal = () => {
+    if (selectedDate) {
+      onNavigateToAddMeal(selectedDate); // Navigate to the "Add Meal" screen
+      setIsModalVisible(false);
+    }
+  };
+
+  const handleDeleteMeals = () => {
+    if (selectedDate) {
+      deleteAllMealsForDate(selectedDate); // Delete all meals for the selected date
+      setIsModalVisible(false);
+    }
   };
 
   const handleNextWeek = () => {
@@ -109,7 +152,7 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
                   isToday && styles.currentDayContainer,
                 ]}
               >
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDatePress(dateString)}>
                   <Text style={styles.dateLabel}>{format(currentDate, "EEEE, MMMM d")}</Text>
                 </TouchableOpacity>
                 <View style={styles.mealsContainer}>
@@ -121,7 +164,7 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
                           styles.mealButton,
                           { backgroundColor: getMealButtonColor(meal.meal_type) },
                         ]}
-                        onPress={() => handleMealPress(meal)}
+                        onPress={() => onMealSelect(meal)}
                       >
                         <Text style={styles.mealText}>{meal.name}</Text>
                       </TouchableOpacity>
@@ -139,6 +182,24 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Modal for Date Options */}
+      <Modal visible={isModalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Options for {selectedDate}</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={handleAddMeal}>
+              <Text style={styles.modalButtonText}>Add Meal to Calendar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalButton} onPress={handleDeleteMeals}>
+              <Text style={styles.modalButtonText}>Delete All Meals on Today</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalCancelButton} onPress={() => setIsModalVisible(false)}>
+              <Text style={styles.modalCancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -223,6 +284,49 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 16,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  modalButton: {
+    width: "100%",
+    padding: 12,
+    backgroundColor: "#007BFF",
+    borderRadius: 8,
+    marginBottom: 8,
+    alignItems: "center",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  modalCancelButton: {
+    width: "100%",
+    padding: 12,
+    backgroundColor: "#ccc",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  modalCancelButtonText: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

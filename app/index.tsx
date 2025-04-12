@@ -13,6 +13,7 @@ import CreateMealScreen from "@/components/CreateMealScreen";
 import MyMeals from "@/components/MyMeals";
 import MyMealInfo from "@/components/MyMealInfo";
 import MealPlanDetails from "@/components/MealPlanDetails";
+import AddMealToDate from "@/components/AddMealToDate";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { Meal } from "@/types/types";
 
@@ -28,6 +29,8 @@ function Index() {
   const [isCreatingReview, setIsCreatingReview] = useState(false);
   const [isViewingReviews, setIsViewingReviews] = useState(false);
   const [isCreatingMeal, setIsCreatingMeal] = useState(false);
+  const [isAddMealToDate, setIsAddMealToDate] = useState(false); // New state for AddMealToDate screen
+  const [selectedDate, setSelectedDate] = useState<string | null>(null); // Track the selected date
 
   const handleLogin = () => setIsLoggedIn(true);
 
@@ -47,7 +50,9 @@ function Index() {
     setIsOtherMealsScreen(false);
     setIsMyMealsScreen(false);
     setIsMealPlanDetailsScreen(false);
+    setIsAddMealToDate(false); // Reset AddMealToDate screen state
     setSelectedMeal(null);
+    setSelectedDate(null); // Reset selected date
     setIsCreatingMeal(false);
   };
 
@@ -97,6 +102,11 @@ function Index() {
     setIsCreatingMeal(true);
   };
 
+  const handleNavigateToAddMealToDate = (date: string) => {
+    setSelectedDate(date); // Set the selected date
+    setIsAddMealToDate(true); // Navigate to AddMealToDate screen
+  };
+
   return (
     <View style={styles.container}>
       {isLoggedIn ? (
@@ -120,6 +130,11 @@ function Index() {
           <MealPlanDetails
             meal={selectedMeal}
             onBack={handleBackToCalendar}
+          />
+        ) : isAddMealToDate && selectedDate ? (
+          <AddMealToDate
+            route={{ params: { date: selectedDate } }}
+            navigation={{ goBack: handleBackToCalendar }}
           />
         ) : selectedMeal ? (
           isOtherMealsScreen ? (
@@ -206,6 +221,7 @@ function Index() {
             <MealPlanCalendar
               onNavigateToCreateMeal={handleNavigateToCreateMeal}
               onMealSelect={handleNavigateToMealPlanDetails}
+              onNavigateToAddMeal={handleNavigateToAddMealToDate}
             />
             <View style={styles.bottomBar}>
               <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>

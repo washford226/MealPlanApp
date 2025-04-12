@@ -670,8 +670,10 @@ router.delete('/meal-plan/:meal_plan_id', authMiddleware, (req: Request, res: Re
     });
 });
 
+//Delete meal plan for a specific date
 router.delete('/meal-plan-clear', authMiddleware, (req: Request, res: Response) => {
   const { date } = req.body; // Extract the date from the request body
+  const user_id = req.user?.id; // Get the authenticated user's ID
   const db = (req as any).db; // Get the database instance
 
   if (!date) {
@@ -679,12 +681,17 @@ router.delete('/meal-plan-clear', authMiddleware, (req: Request, res: Response) 
     return;
   }
 
+  if (!user_id) {
+    res.status(401).send('User is not authenticated');
+    return;
+  }
+
   const query = `
     DELETE FROM Meal_Plan
-    WHERE date = ?
+    WHERE date = ? AND user_id = ?
   `;
 
-  db.query(query, [date])
+  db.query(query, [date, user_id])
     .then(() => {
       res.status(200).send('Meal plan cleared for the date');
     })
