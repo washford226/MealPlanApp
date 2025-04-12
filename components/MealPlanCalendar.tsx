@@ -3,28 +3,24 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView }
 import { format, startOfWeek, addDays } from "date-fns";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Meal } from "@/types/types";
 
-type Meal = {
-  name: string;
-  description: string;
-  calories: number;
-  protein: number;
-  carbohydrates: number;
-  fat: number;
-  meal_type: "Breakfast" | "Lunch" | "Dinner" | "Other"; // Add meal_type field
+
+type MealPlanCalendarProps = {
+  onMealSelect: (meal: Meal) => void; // Callback for selecting a meal
+  onNavigateToCreateMeal: () => void;
 };
 
 const BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
 
-const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: () => void }) => {
+const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNavigateToCreateMeal }) => {
   const today = new Date();
-  const [weekOffset, setWeekOffset] = useState(0); // State to track the current week offset
-  const [meals, setMeals] = useState<{ [key: string]: Meal[] }>({}); // State to store meals for the weeks
-  const scrollViewRef = useRef<ScrollView>(null); // Reference for the ScrollView
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [meals, setMeals] = useState<{ [key: string]: Meal[] }>({});
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  const startOfCurrentWeek = startOfWeek(today, { weekStartsOn: 0 }); // Week starts on Sunday
+  const startOfCurrentWeek = startOfWeek(today, { weekStartsOn: 0 });
 
-  // Fetch meals for a specific date
   const fetchMealsForDate = async (date: string) => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -50,7 +46,6 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
     }
   };
 
-  // Fetch meals for a specific week
   const fetchMealsForWeek = async (weekStartDate: Date) => {
     const newMeals: { [key: string]: Meal[] } = {};
     for (let i = 0; i < 7; i++) {
@@ -59,51 +54,44 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
       const mealsForDate = await fetchMealsForDate(currentDateString);
       newMeals[currentDateString] = mealsForDate;
     }
-    setMeals((prevMeals) => ({ ...prevMeals, ...newMeals })); // Append new meals to the existing state
+    setMeals((prevMeals) => ({ ...prevMeals, ...newMeals }));
   };
 
-  // Fetch meals for the current week on initial render
   useEffect(() => {
     fetchMealsForWeek(startOfCurrentWeek);
 
-    // Scroll to the current date
     const todayIndex = Math.floor((today.getTime() - startOfCurrentWeek.getTime()) / (1000 * 60 * 60 * 24));
     if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ x: todayIndex * 166, animated: true }); // 166 is the approximate width of each day container (150 + margin)
+      scrollViewRef.current.scrollTo({ x: todayIndex * 166, animated: true });
     }
   }, []);
 
-  const handleDatePress = (date: string) => {
-    Alert.alert("Date Selected", `You selected ${date}`);
-  };
-
   const handleMealPress = (meal: Meal) => {
-    Alert.alert("Meal Selected", `You selected ${meal.name}`);
+    onMealSelect(meal); // Call the onMealSelect callback with the selected meal
   };
 
   const handleNextWeek = () => {
     const nextWeekStartDate = addDays(startOfCurrentWeek, (weekOffset + 1) * 7);
-    setWeekOffset((prevOffset) => prevOffset + 1); // Increment the week offset
-    fetchMealsForWeek(nextWeekStartDate); // Fetch meals for the next week
+    setWeekOffset((prevOffset) => prevOffset + 1);
+    fetchMealsForWeek(nextWeekStartDate);
   };
 
   const getMealButtonColor = (mealType: string) => {
     switch (mealType) {
       case "Breakfast":
-        return "#FF6347"; // Red for breakfast
+        return "#FF6347";
       case "Lunch":
-        return "#32CD32"; // Green for lunch
+        return "#32CD32";
       case "Dinner":
-        return "#1E90FF"; // Blue for dinner
+        return "#1E90FF";
       case "Other":
       default:
-        return "#800080"; // Purple for other meals
+        return "#800080";
     }
   };
 
   return (
     <View style={styles.outerContainer}>
-      {/* Create Meal Button */}
       <View style={styles.createMealButtonContainer}>
         <TouchableOpacity style={styles.createMealButton} onPress={onNavigateToCreateMeal}>
           <Text style={styles.createMealButtonText}>Create Meal</Text>
@@ -111,19 +99,18 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
       </View>
       <ScrollView horizontal={true} style={styles.scrollView} ref={scrollViewRef}>
         <View style={styles.container}>
-          {/* Display meals for all weeks */}
           {Object.keys(meals).map((dateString) => {
             const currentDate = new Date(dateString);
-            const isToday = format(currentDate, "yyyy-MM-dd") === format(today, "yyyy-MM-dd"); // Check if the date is today
+            const isToday = format(currentDate, "yyyy-MM-dd") === format(today, "yyyy-MM-dd");
             return (
               <View
                 key={dateString}
                 style={[
                   styles.dayContainer,
-                  isToday && styles.currentDayContainer, // Apply bold border for the current date
+                  isToday && styles.currentDayContainer,
                 ]}
               >
-                <TouchableOpacity onPress={() => handleDatePress(dateString)}>
+                <TouchableOpacity>
                   <Text style={styles.dateLabel}>{format(currentDate, "EEEE, MMMM d")}</Text>
                 </TouchableOpacity>
                 <View style={styles.mealsContainer}>
@@ -133,7 +120,7 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
                         key={index}
                         style={[
                           styles.mealButton,
-                          { backgroundColor: getMealButtonColor(meal.meal_type) }, // Use meal_type for color
+                          { backgroundColor: getMealButtonColor(meal.meal_type) },
                         ]}
                         onPress={() => handleMealPress(meal)}
                       >
@@ -147,7 +134,6 @@ const MealPlanCalendar = ({ onNavigateToCreateMeal }: { onNavigateToCreateMeal: 
               </View>
             );
           })}
-          {/* Button to display the next week */}
           <TouchableOpacity style={styles.nextWeekButton} onPress={handleNextWeek}>
             <Text style={styles.nextWeekButtonText}>Next Week</Text>
           </TouchableOpacity>
@@ -180,21 +166,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    flexDirection: "row", // Arrange days horizontally
+    flexDirection: "row",
     padding: 16,
   },
   dayContainer: {
-    width: 150, // Set a fixed width for each day
+    width: 150,
     marginRight: 16,
-    padding: 8, // Add padding inside the border
-    borderWidth: 1, // Add a border
-    borderColor: "#ccc", // Set the border color
-    borderRadius: 8, // Add rounded corners
-    backgroundColor: "#f9f9f9", // Add a light background color
+    padding: 8,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    backgroundColor: "#f9f9f9",
   },
   currentDayContainer: {
-    borderWidth: 2, // Make the border bold
-    borderColor: "#007BFF", // Use a distinct color for the current date
+    borderWidth: 2,
+    borderColor: "#007BFF",
   },
   dateLabel: {
     fontSize: 16,
@@ -227,8 +213,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    width: 150, // Match the width of day containers
-    height: 100, // Match the height of day containers
+    width: 150,
+    height: 100,
   },
   nextWeekButtonText: {
     color: "#fff",
