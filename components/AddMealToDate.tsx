@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Platform, Mo
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Meal } from "@/types/types";
-import Icon from "react-native-vector-icons/FontAwesome";
+import { useTheme } from "@/context/ThemeContext"; // Import the ThemeContext
 
 type AddMealToDateProps = {
   route: { params: { date: string } }; // Receive the selected date as a prop
@@ -14,6 +14,7 @@ const BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://lo
 
 const AddMealToDate: React.FC<AddMealToDateProps> = ({ route, navigation }) => {
   const { date } = route.params; // Extract the selected date
+  const { theme } = useTheme(); // Access the theme from the context
   const [meals, setMeals] = useState<Meal[]>([]);
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null); // Track the selected meal
   const [isModalVisible, setIsModalVisible] = useState(false); // Modal visibility state
@@ -74,17 +75,25 @@ const AddMealToDate: React.FC<AddMealToDateProps> = ({ route, navigation }) => {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Add Meal to {date}</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.text }]}>Add Meal to {date}</Text>
       <FlatList
         data={meals}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.mealItem} onPress={() => handleMealPress(item)}>
-            <Text style={styles.mealName}>{item.name}</Text>
+          <TouchableOpacity
+            style={[styles.mealItem, { backgroundColor: theme.card }]}
+            onPress={() => handleMealPress(item)}
+          >
+            <Text style={[styles.mealName, { color: theme.text }]}>{item.name}</Text>
+            <Text style={[styles.mealDescription, { color: theme.subtext }]}>
+              {item.description || "No description available"}
+            </Text>
           </TouchableOpacity>
         )}
-        ListEmptyComponent={<Text style={styles.emptyText}>No meals available</Text>}
+        ListEmptyComponent={
+          <Text style={[styles.emptyText, { color: theme.subtext }]}>No meals available</Text>
+        }
       />
 
       {/* Modal for Meal Type Selection */}
@@ -95,39 +104,42 @@ const AddMealToDate: React.FC<AddMealToDateProps> = ({ route, navigation }) => {
         onRequestClose={() => setIsModalVisible(false)}
       >
         <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Meal Type</Text>
+          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Select Meal Type</Text>
             <TouchableOpacity
-              style={styles.modalButton}
+              style={[styles.modalButton, { backgroundColor: theme.primary }]}
               onPress={() => addMealToDate(selectedMeal!.id, "Breakfast")}
             >
-              <Text style={styles.modalButtonText}>Breakfast</Text>
+              <Text style={[styles.modalButtonText, { color: theme.buttonText }]}>Breakfast</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.modalButton}
+              style={[styles.modalButton, { backgroundColor: theme.primary }]}
               onPress={() => addMealToDate(selectedMeal!.id, "Lunch")}
             >
-              <Text style={styles.modalButtonText}>Lunch</Text>
+              <Text style={[styles.modalButtonText, { color: theme.buttonText }]}>Lunch</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.modalButton}
+              style={[styles.modalButton, { backgroundColor: theme.primary }]}
               onPress={() => addMealToDate(selectedMeal!.id, "Dinner")}
             >
-              <Text style={styles.modalButtonText}>Dinner</Text>
+              <Text style={[styles.modalButtonText, { color: theme.buttonText }]}>Dinner</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.modalButton, styles.cancelButton]}
+              style={[styles.modalButton, styles.cancelButton, { backgroundColor: theme.danger }]}
               onPress={() => setIsModalVisible(false)}
             >
-              <Text style={styles.modalButtonText}>Cancel</Text>
+              <Text style={[styles.modalButtonText, { color: theme.buttonText }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
       {/* Back Button */}
-      <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-        <Text style={styles.buttonText}>Back to Calendar</Text>
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: theme.primary }]}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={[styles.buttonText, { color: theme.buttonText }]}>Back to Calendar</Text>
       </TouchableOpacity>
     </View>
   );
@@ -137,7 +149,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: "#fff",
   },
   title: {
     fontSize: 20,
@@ -148,17 +159,19 @@ const styles = StyleSheet.create({
   mealItem: {
     padding: 16,
     marginBottom: 8,
-    backgroundColor: "#f0f0f0",
     borderRadius: 8,
   },
   mealName: {
     fontSize: 16,
     fontWeight: "bold",
   },
+  mealDescription: {
+    fontSize: 14,
+    marginTop: 4,
+  },
   emptyText: {
     fontSize: 14,
     fontStyle: "italic",
-    color: "#888",
     textAlign: "center",
     marginTop: 16,
   },
@@ -166,13 +179,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
-    backgroundColor: "#007BFF",
     marginTop: 16,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#fff",
   },
   modalContainer: {
     flex: 1,
@@ -182,7 +193,6 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "80%",
-    backgroundColor: "#fff",
     borderRadius: 8,
     padding: 16,
     alignItems: "center",
@@ -195,7 +205,6 @@ const styles = StyleSheet.create({
   modalButton: {
     padding: 12,
     borderRadius: 8,
-    backgroundColor: "#007BFF",
     marginBottom: 8,
     width: "100%",
     alignItems: "center",
@@ -203,10 +212,9 @@ const styles = StyleSheet.create({
   modalButtonText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#fff",
   },
   cancelButton: {
-    backgroundColor: "#FF3B30",
+    marginTop: 8,
   },
 });
 

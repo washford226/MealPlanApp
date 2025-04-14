@@ -18,7 +18,7 @@ const lightTheme = {
     breakfast: '#ff6f61', // Red for breakfast
     lunch: '#4caf50', // Green for lunch
     dinner: '#2196f3', // Blue for dinner
-    snack: '#9c27b0', // Purple for snacks
+    other: '#9c27b0', // Purple for other
   },
   mealText: '#ffffff', // White text for meal blocks
 };
@@ -40,7 +40,7 @@ const darkTheme = {
     breakfast: '#ff6f61', // Red for breakfast
     lunch: '#4caf50', // Green for lunch
     dinner: '#2196f3', // Blue for dinner
-    snack: '#9c27b0', // Purple for snacks
+    other: '#9c27b0', // Purple for other
   },
   mealText: '#ffffff', // White text for meal blocks
 };
