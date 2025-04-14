@@ -4,6 +4,7 @@ import { format, startOfWeek, addDays } from "date-fns";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Meal } from "@/types/types";
+import { useTheme } from "@/context/ThemeContext"; // Import the ThemeContext
 
 type MealPlanCalendarProps = {
   onMealSelect: (meal: Meal) => void; // Callback for selecting a meal
@@ -13,8 +14,13 @@ type MealPlanCalendarProps = {
 
 const BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
 
-const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNavigateToCreateMeal, onNavigateToAddMeal }) => {
+const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({
+  onMealSelect,
+  onNavigateToCreateMeal,
+  onNavigateToAddMeal,
+}) => {
   const today = new Date();
+  const { theme } = useTheme(); // Access the theme from the context
   const [daysToShow, setDaysToShow] = useState(7); // Start with 7 days
   const [meals, setMeals] = useState<{ [key: string]: Meal[] }>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null); // Track the selected date
@@ -87,12 +93,17 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
 
   useEffect(() => {
     fetchMealsForWeek(startOfCurrentWeek);
-
-    const todayIndex = Math.floor((today.getTime() - startOfWeek(today, { weekStartsOn: 0 }).getTime()) / (1000 * 60 * 60 * 24));
+  }, [daysToShow]);
+  
+  useEffect(() => {
+    // Center on the current date only when the component mounts
+    const todayIndex = Math.floor(
+      (today.getTime() - startOfWeek(today, { weekStartsOn: 0 }).getTime()) / (1000 * 60 * 60 * 24)
+    );
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollTo({ x: todayIndex * 166, animated: true });
     }
-  }, [daysToShow]);
+  }, []); // Empty dependency array ensures this runs only once
 
   const handleDatePress = (date: string) => {
     setSelectedDate(date);
@@ -118,24 +129,18 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
   };
 
   const getMealButtonColor = (mealType: string) => {
-    switch (mealType) {
-      case "Breakfast":
-        return "#FF6347";
-      case "Lunch":
-        return "#32CD32";
-      case "Dinner":
-        return "#1E90FF";
-      case "Other":
-      default:
-        return "#800080";
-    }
+    const mealTypeKey = mealType.toLowerCase() as keyof typeof theme.mealColors;
+    return theme.mealColors[mealTypeKey] || theme.button;
   };
 
   return (
-    <View style={styles.outerContainer}>
+    <View style={[styles.outerContainer, { backgroundColor: theme.background }]}>
       <View style={styles.createMealButtonContainer}>
-        <TouchableOpacity style={styles.createMealButton} onPress={onNavigateToCreateMeal}>
-          <Text style={styles.createMealButtonText}>Create Meal</Text>
+        <TouchableOpacity
+          style={[styles.createMealButton, { backgroundColor: theme.primary }]}
+          onPress={onNavigateToCreateMeal}
+        >
+          <Text style={[styles.createMealButtonText, { color: theme.buttonText }]}>Create Meal</Text>
         </TouchableOpacity>
       </View>
       <ScrollView horizontal={true} style={styles.scrollView} ref={scrollViewRef}>
@@ -149,11 +154,14 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
                 key={dateString}
                 style={[
                   styles.dayContainer,
-                  isToday && styles.currentDayContainer,
+                  { backgroundColor: theme.card },
+                  isToday && { borderColor: theme.primary },
                 ]}
               >
                 <TouchableOpacity onPress={() => handleDatePress(dateString)}>
-                  <Text style={styles.dateLabel}>{format(currentDate, "EEEE, MMMM d")}</Text>
+                  <Text style={[styles.dateLabel, { color: theme.text }]}>
+                    {format(currentDate, "EEEE, MMMM d")}
+                  </Text>
                 </TouchableOpacity>
                 <View style={styles.mealsContainer}>
                   {meals[dateString]?.length > 0 ? (
@@ -166,19 +174,24 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
                         ]}
                         onPress={() => onMealSelect(meal)}
                       >
-                        <Text style={styles.mealText}>{meal.name}</Text>
+                        <Text style={[styles.mealText, { color: theme.mealText }]}>{meal.name}</Text>
                       </TouchableOpacity>
                     ))
                   ) : (
-                    <Text style={styles.noMealText}>No meals for this day</Text>
+                    <Text style={[styles.noMealText, { color: theme.subtext }]}>
+                      No meals for this day
+                    </Text>
                   )}
                 </View>
               </View>
             );
           })}
           {/* Next Week Button */}
-          <TouchableOpacity style={styles.nextWeekButton} onPress={handleNextWeek}>
-            <Text style={styles.nextWeekButtonText}>Next Week</Text>
+          <TouchableOpacity
+            style={[styles.nextWeekButton, { backgroundColor: theme.primary }]}
+            onPress={handleNextWeek}
+          >
+            <Text style={[styles.nextWeekButtonText, { color: theme.buttonText }]}>Next Week</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -186,16 +199,31 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
       {/* Modal for Date Options */}
       <Modal visible={isModalVisible} transparent={true} animationType="slide">
         <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Options for {selectedDate}</Text>
-            <TouchableOpacity style={styles.modalButton} onPress={handleAddMeal}>
-              <Text style={styles.modalButtonText}>Add Meal to Calendar</Text>
+          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>
+              Options for {selectedDate}
+            </Text>
+            <TouchableOpacity
+              style={[styles.modalButton, { backgroundColor: theme.primary }]}
+              onPress={handleAddMeal}
+            >
+              <Text style={[styles.modalButtonText, { color: theme.buttonText }]}>
+                Add Meal to Calendar
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.modalButton} onPress={handleDeleteMeals}>
-              <Text style={styles.modalButtonText}>Delete All Meals on Today</Text>
+            <TouchableOpacity
+              style={[styles.modalButton, { backgroundColor: theme.danger }]}
+              onPress={handleDeleteMeals}
+            >
+              <Text style={[styles.modalButtonText, { color: theme.buttonText }]}>
+                Delete All Meals on Today
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.modalCancelButton} onPress={() => setIsModalVisible(false)}>
-              <Text style={styles.modalCancelButtonText}>Cancel</Text>
+            <TouchableOpacity
+              style={[styles.modalCancelButton, { backgroundColor: theme.border }]}
+              onPress={() => setIsModalVisible(false)}
+            >
+              <Text style={[styles.modalCancelButtonText, { color: theme.text }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -231,7 +259,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   dayContainer: {
-    width: 150,
+    width: 200,    //Change the width of the day container 
     marginRight: 16,
     padding: 8,
     borderWidth: 1,

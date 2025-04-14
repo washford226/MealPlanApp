@@ -202,7 +202,7 @@ router.get('/user', authMiddleware, (req: Request, res: Response) => {
   const user = (req as any).user;
   const db = (req as any).db;
 
-  db.query('SELECT id, username, calories_goal, dietary_restrictions, profile_picture FROM users WHERE id = ?', [user.id])
+  db.query('SELECT * FROM users WHERE id = ?', [user.id])
     .then(([rows]: [User[], any]) => {
       if (rows.length === 0) {
         return res.status(404).send('User not found');
@@ -603,7 +603,7 @@ router.get('/meal-plan', authMiddleware, (req: Request, res: Response): void => 
   }
 
   const query = `
-    SELECT mp.meal_plan_id, mp.date, mp.meal_type, m.name, m.description, m.calories, m.protein, m.carbohydrates, m.fat
+    SELECT *
     FROM Meal_Plan mp
     INNER JOIN meals m ON mp.meal_id = m.id
     WHERE mp.date = ?
