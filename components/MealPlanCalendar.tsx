@@ -5,7 +5,6 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Meal } from "@/types/types";
 
-
 type MealPlanCalendarProps = {
   onMealSelect: (meal: Meal) => void; // Callback for selecting a meal
   onNavigateToCreateMeal: () => void;
@@ -15,10 +14,11 @@ const BASE_URL = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://lo
 
 const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNavigateToCreateMeal }) => {
   const today = new Date();
-  const [weekOffset, setWeekOffset] = useState(0);
+  const [daysToShow, setDaysToShow] = useState(7); // Start with 7 days
   const [meals, setMeals] = useState<{ [key: string]: Meal[] }>({});
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // Calculate the start of the current week (Sunday)
   const startOfCurrentWeek = startOfWeek(today, { weekStartsOn: 0 });
 
   const fetchMealsForDate = async (date: string) => {
@@ -48,7 +48,7 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
 
   const fetchMealsForWeek = async (weekStartDate: Date) => {
     const newMeals: { [key: string]: Meal[] } = {};
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < daysToShow; i++) {
       const currentDate = addDays(weekStartDate, i);
       const currentDateString = format(currentDate, "yyyy-MM-dd");
       const mealsForDate = await fetchMealsForDate(currentDateString);
@@ -60,20 +60,18 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
   useEffect(() => {
     fetchMealsForWeek(startOfCurrentWeek);
 
-    const todayIndex = Math.floor((today.getTime() - startOfCurrentWeek.getTime()) / (1000 * 60 * 60 * 24));
+    const todayIndex = Math.floor((today.getTime() - startOfWeek(today, { weekStartsOn: 0 }).getTime()) / (1000 * 60 * 60 * 24));
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollTo({ x: todayIndex * 166, animated: true });
     }
-  }, []);
+  }, [daysToShow]);
 
   const handleMealPress = (meal: Meal) => {
     onMealSelect(meal); // Call the onMealSelect callback with the selected meal
   };
 
   const handleNextWeek = () => {
-    const nextWeekStartDate = addDays(startOfCurrentWeek, (weekOffset + 1) * 7);
-    setWeekOffset((prevOffset) => prevOffset + 1);
-    fetchMealsForWeek(nextWeekStartDate);
+    setDaysToShow((prevDays) => prevDays + 7); // Add 7 more days to the calendar
   };
 
   const getMealButtonColor = (mealType: string) => {
@@ -99,8 +97,9 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
       </View>
       <ScrollView horizontal={true} style={styles.scrollView} ref={scrollViewRef}>
         <View style={styles.container}>
-          {Object.keys(meals).map((dateString) => {
-            const currentDate = new Date(dateString);
+          {Array.from({ length: daysToShow }).map((_, i) => {
+            const currentDate = addDays(startOfCurrentWeek, i);
+            const dateString = format(currentDate, "yyyy-MM-dd");
             const isToday = format(currentDate, "yyyy-MM-dd") === format(today, "yyyy-MM-dd");
             return (
               <View
@@ -134,6 +133,7 @@ const MealPlanCalendar: React.FC<MealPlanCalendarProps> = ({ onMealSelect, onNav
               </View>
             );
           })}
+          {/* Next Week Button */}
           <TouchableOpacity style={styles.nextWeekButton} onPress={handleNextWeek}>
             <Text style={styles.nextWeekButtonText}>Next Week</Text>
           </TouchableOpacity>
@@ -208,13 +208,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   nextWeekButton: {
-    backgroundColor: "#007BFF",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
     width: 150,
-    height: 100,
+    marginLeft: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    backgroundColor: "#007BFF",
+    justifyContent: "center",
+    alignItems: "center",
   },
   nextWeekButtonText: {
     color: "#fff",

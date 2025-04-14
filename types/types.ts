@@ -12,4 +12,5 @@ export interface Meal {
     averageRating: number;
     reviewCount?: number;
     meal_type: "Breakfast" | "Lunch" | "Dinner" | "Other";
+    meal_plan_id: number;
   }
