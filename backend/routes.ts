@@ -439,40 +439,6 @@ router.post('/add-meal', authMiddleware, (req: Request, res: Response) => {
     });
 });
 
-
-// Add a meal to the meal plan
-router.post('/meal-plan', authMiddleware, (req: Request, res: Response): void => {
-  const { meal_id, date, meal_type } = req.body; // Extract data from the request body
-  const db = (req as any).db; // Get the database instance
-
-  // Validate the input
-  if (!meal_id || !date || !meal_type) {
-    res.status(400).send('Meal ID, date, and meal type are required');
-    return;
-  }
-
-  // Ensure the meal_type is valid
-  const validMealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Other'];
-  if (!validMealTypes.includes(meal_type)) {
-    res.status(400).send(`Invalid meal type. Valid types are: ${validMealTypes.join(', ')}`);
-    return;
-  }
-
-  const query = `
-    INSERT INTO meal_plans (meal_id, date, meal_type)
-    VALUES (?, ?, ?)
-  `;
-
-  db.query(query, [meal_id, date, meal_type])
-    .then(() => {
-      res.status(201).send('Meal added to the meal plan successfully');
-    })
-    .catch((err: Error) => {
-      console.error('Error adding meal to the meal plan:', err);
-      res.status(500).send('Error adding meal to the meal plan');
-    });
-});
-
 // Get meals for the current user (without reviews)
 router.get('/my-meals', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   const user = (req as any).user; // Get the authenticated user
@@ -602,27 +568,22 @@ router.delete('/meals/:meal_id', authMiddleware, async (req: Request, res: Respo
 // Add a meal to the meal plan
 router.post('/meal-plan', authMiddleware, (req: Request, res: Response): void => {
   const { meal_id, date, meal_type } = req.body; // Extract data from the request body
+  const user_id = (req as any).user.id; // Get the user ID from the authenticated user (assumes authMiddleware sets req.user)
+
   const db = (req as any).db; // Get the database instance
 
-  // Validate the input
+  // Validate input
   if (!meal_id || !date || !meal_type) {
     res.status(400).send('Meal ID, date, and meal type are required');
     return;
   }
 
-  // Ensure the meal_type is valid
-  const validMealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Other'];
-  if (!validMealTypes.includes(meal_type)) {
-    res.status(400).send(`Invalid meal type. Valid types are: ${validMealTypes.join(', ')}`);
-    return;
-  }
-
   const query = `
-    INSERT INTO Meal_Plan (meal_id, date, meal_type)
-    VALUES (?, ?, ?)
+    INSERT INTO Meal_Plan (meal_id, user_id, date, meal_type)
+    VALUES (?, ?, ?, ?)
   `;
 
-  db.query(query, [meal_id, date, meal_type])
+  db.query(query, [meal_id, user_id, date, meal_type])
     .then(() => {
       res.status(201).send('Meal added to the meal plan successfully');
     })
@@ -657,32 +618,6 @@ router.get('/meal-plan', authMiddleware, (req: Request, res: Response): void => 
       console.error('Error fetching meals for the date:', err);
       res.status(500).send('Error fetching meals for the date');
     });
-});
-
-router.get('/meal-plan-range', authMiddleware, async (req: Request, res: Response): Promise<void> => {
-  const { startDate, endDate } = req.query; // Extract the date range from the query parameters
-  const db = (req as any).db; // Get the database instance
-
-  if (!startDate || !endDate) {
-    res.status(400).send('Start date and end date are required');
-    return;
-  }
-
-  const query = `
-    SELECT mp.meal_plan_id, mp.date, mp.meal_type, m.name, m.description, m.calories, m.protein, m.carbohydrates, m.fat
-    FROM Meal_Plan mp
-    INNER JOIN meals m ON mp.meal_id = m.id
-    WHERE mp.date BETWEEN ? AND ?
-    ORDER BY mp.date ASC, FIELD(mp.meal_type, 'Breakfast', 'Lunch', 'Dinner', 'Other')
-  `;
-
-  try {
-    const [rows]: [any[], any] = await db.query(query, [startDate, endDate]);
-    res.status(200).json(rows);
-  } catch (err) {
-    console.error('Error fetching meals for the date range:', err);
-    res.status(500).send('Error fetching meals for the date range');
-  }
 });
 
 router.put('/meal-plan/:meal_plan_id', authMiddleware, async (req: Request, res: Response): Promise<void> => {

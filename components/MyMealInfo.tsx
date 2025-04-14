@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, Alert, Platform, Switch, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Alert,
+  Platform,
+  Switch,
+  TouchableOpacity,
+  Modal,
+} from "react-native";
 import { Meal } from "@/types/types";
 import { useTheme } from "@/context/ThemeContext";
 import axios from "axios";
@@ -17,8 +27,16 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedMeal, setEditedMeal] = useState<Meal>({ ...meal });
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [mealType, setMealType] = useState("Breakfast");
 
-  const handleSave = async () => {
+  const handleAddToMealPlan = async () => {
+    if (!selectedDate) {
+      Alert.alert("Error", "Please select a date.");
+      return;
+    }
+
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) {
@@ -26,22 +44,39 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
         return;
       }
 
-      const response = await axios.put(
-        `${BASE_URL}/meals/${meal.id}`,
-        editedMeal,
+      const response = await axios.post(
+        `${BASE_URL}/meal-plan`,
+        {
+          meal_id: meal.id,
+          date: selectedDate,
+          meal_type: mealType,
+        },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      if (response.status === 200) {
-        Alert.alert("Success", "Meal updated successfully!");
-        setIsEditing(false);
+      if (response.status === 201) {
+        Alert.alert("Success", "Meal added to the meal plan!");
+        setIsModalVisible(false);
+        setSelectedDate("");
+        setMealType("Breakfast");
       }
     } catch (error) {
-      console.error("Error updating meal:", error);
-      Alert.alert("Error", "Failed to update meal. Please try again later.");
+      console.error("Error adding meal to meal plan:", error);
+      Alert.alert("Error", "Failed to add meal to the meal plan. Please try again later.");
     }
+  };
+
+  const confirmDelete = () => {
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to delete this meal? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: handleDelete },
+      ]
+    );
   };
 
   const handleDelete = async () => {
@@ -66,21 +101,37 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
     }
   };
 
-  const confirmDelete = () => {
-    Alert.alert(
-      "Confirm Deletion",
-      "Are you sure you want to delete this meal? This action cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: handleDelete },
-      ]
-    );
+  const handleSave = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Error", "User not authenticated. Please log in.");
+        return;
+      }
+
+      const response = await axios.put(
+        `${BASE_URL}/meals/${editedMeal.id}`,
+        editedMeal,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.status === 200) {
+        Alert.alert("Success", "Meal updated successfully!");
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error("Error saving meal:", error);
+      Alert.alert("Error", "Failed to save meal. Please try again later.");
+    }
   };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {isEditing ? (
         <>
+          {/* Editing UI */}
           <TextInput
             style={[styles.input, { borderColor: theme.border, color: theme.text }]}
             value={editedMeal.name}
@@ -162,6 +213,7 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
         </>
       ) : (
         <>
+          {/* Viewing UI */}
           <Text style={[styles.title, { color: theme.text }]}>{meal.name}</Text>
           <Text style={[styles.description, { color: theme.subtext }]}>{meal.description}</Text>
           <Text style={[styles.details, { color: theme.text }]}>Ingredients: {meal.ingredients}</Text>
@@ -186,12 +238,53 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, { backgroundColor: theme.button }]}
+            onPress={() => setIsModalVisible(true)}
+          >
+            <Text style={[styles.buttonText, { color: theme.buttonText }]}>Save to Calendar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: theme.button }]}
             onPress={onBack}
           >
             <Text style={[styles.buttonText, { color: theme.buttonText }]}>Back to My Meals</Text>
           </TouchableOpacity>
         </>
       )}
+
+      {/* Modal for Adding to Meal Plan */}
+      <Modal visible={isModalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Add to Meal Plan</Text>
+            <TextInput
+              style={[styles.input, { borderColor: theme.border, color: theme.text }]}
+              placeholder="Select Date (YYYY-MM-DD)"
+              placeholderTextColor={theme.placeholder}
+              value={selectedDate}
+              onChangeText={setSelectedDate}
+            />
+            <TextInput
+              style={[styles.input, { borderColor: theme.border, color: theme.text }]}
+              placeholder="Meal Type (e.g., Breakfast, Lunch, Dinner)"
+              placeholderTextColor={theme.placeholder}
+              value={mealType}
+              onChangeText={setMealType}
+            />
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: theme.button }]}
+              onPress={handleAddToMealPlan}
+            >
+              <Text style={[styles.buttonText, { color: theme.buttonText }]}>Add</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: theme.danger }]}
+              onPress={() => setIsModalVisible(false)}
+            >
+              <Text style={[styles.buttonText, { color: theme.buttonText }]}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -246,6 +339,22 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: "bold",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "80%",
+    padding: 20,
+    borderRadius: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
   },
 });
 
