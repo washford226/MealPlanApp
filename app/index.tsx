@@ -12,6 +12,7 @@ import ViewReviews from "@/components/ViewReviews";
 import CreateMealScreen from "@/components/CreateMealScreen";
 import MyMeals from "@/components/MyMeals";
 import MyMealInfo from "@/components/MyMealInfo";
+import MealPlanDetails from "@/components/MealPlanDetails";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { Meal } from "@/types/types";
 
@@ -22,6 +23,7 @@ function Index() {
   const [isForgotPasswordScreen, setIsForgotPasswordScreen] = useState(false);
   const [isOtherMealsScreen, setIsOtherMealsScreen] = useState(false);
   const [isMyMealsScreen, setIsMyMealsScreen] = useState(false);
+  const [isMealPlanDetailsScreen, setIsMealPlanDetailsScreen] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [isCreatingReview, setIsCreatingReview] = useState(false);
   const [isViewingReviews, setIsViewingReviews] = useState(false);
@@ -44,6 +46,7 @@ function Index() {
     setIsAccountScreen(false);
     setIsOtherMealsScreen(false);
     setIsMyMealsScreen(false);
+    setIsMealPlanDetailsScreen(false);
     setSelectedMeal(null);
     setIsCreatingMeal(false);
   };
@@ -64,6 +67,11 @@ function Index() {
     setIsOtherMealsScreen(false);
     setIsMyMealsScreen(true);
     setSelectedMeal(null);
+  };
+
+  const handleNavigateToMealPlanDetails = (meal: Meal) => {
+    setSelectedMeal(meal);
+    setIsMealPlanDetailsScreen(true);
   };
 
   const handleNavigateToMealDetails = (meal: Meal): void => setSelectedMeal(meal);
@@ -94,8 +102,8 @@ function Index() {
       {isLoggedIn ? (
         isCreatingMeal ? (
           <CreateMealScreen
-            route={{ params: { selectedDay: "2023-04-07" } }} // Pass params explicitly
-            navigation={{ goBack: handleBackToCalendar }} // Mock navigation
+            route={{ params: { selectedDay: "2023-04-07" } }}
+            navigation={{ goBack: handleBackToCalendar }}
           />
         ) : isCreatingReview && selectedMeal ? (
           <CreateReview
@@ -107,6 +115,11 @@ function Index() {
           <ViewReviews
             meal={selectedMeal}
             onBack={() => setIsViewingReviews(false)}
+          />
+        ) : isMealPlanDetailsScreen && selectedMeal ? (
+          <MealPlanDetails
+            meal={selectedMeal}
+            onBack={handleBackToCalendar}
           />
         ) : selectedMeal ? (
           isOtherMealsScreen ? (
@@ -190,9 +203,10 @@ function Index() {
           </>
         ) : (
           <View style={styles.calendarContainer}>
-            <MealPlanCalendar 
-               onNavigateToCreateMeal={handleNavigateToCreateMeal} 
-              />
+            <MealPlanCalendar
+              onNavigateToCreateMeal={handleNavigateToCreateMeal}
+              onMealSelect={handleNavigateToMealPlanDetails}
+            />
             <View style={styles.bottomBar}>
               <TouchableOpacity style={styles.barButton} onPress={handleBackToCalendar}>
                 <Icon name="calendar" size={24} color="#000" />
