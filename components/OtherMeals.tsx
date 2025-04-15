@@ -81,14 +81,6 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
     );
   }
 
-  if (filteredMeals.length === 0) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <Text style={[styles.noMealsText, { color: theme.text }]}>No meals match your search.</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Search Bar and Filter Button */}
@@ -105,34 +97,38 @@ const OtherMeals: React.FC<OtherMealsProps> = ({ onMealSelect }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Meals List */}
-      <FlatList
-        data={filteredMeals}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={[styles.mealItem, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <TouchableOpacity onPress={() => onMealSelect(item)}>
-              <Text style={[styles.mealName, { color: theme.text }]}>{item.name}</Text>
-              <Text style={[styles.mealDescription, { color: theme.subtext }]}>{item.description}</Text>
-              <Text style={[styles.mealUser, { color: theme.subtext }]}>By: {item.userName}</Text>
-              <View style={styles.ratingContainer}>
-                <StarRating
-                  rating={Math.round(Math.min(Math.max(Number(item.averageRating || 0), 0), 5))}
-                  maxStars={5}
-                  starSize={20}
-                  color={theme.starColor} // Use theme's starColor
-                  enableSwiping={false}
-                  onChange={() => {}}
-                />
-                <Text style={[styles.reviewCount, { color: theme.subtext }]}>
-                  ({item.reviewCount} reviews)
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        )}
-        contentContainerStyle={styles.listContent}
-      />
+      {/* Meals List or No Results Message */}
+      {filteredMeals.length > 0 ? (
+        <FlatList
+          data={filteredMeals}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <View style={[styles.mealItem, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <TouchableOpacity onPress={() => onMealSelect(item)}>
+                <Text style={[styles.mealName, { color: theme.text }]}>{item.name}</Text>
+                <Text style={[styles.mealDescription, { color: theme.subtext }]}>{item.description}</Text>
+                <Text style={[styles.mealUser, { color: theme.subtext }]}>By: {item.userName}</Text>
+                <View style={styles.ratingContainer}>
+                  <StarRating
+                    rating={Math.round(Math.min(Math.max(Number(item.averageRating || 0), 0), 5))}
+                    maxStars={5}
+                    starSize={20}
+                    color={theme.starColor} // Use theme's starColor
+                    enableSwiping={false}
+                    onChange={() => {}}
+                  />
+                  <Text style={[styles.reviewCount, { color: theme.subtext }]}>
+                    ({item.reviewCount} reviews)
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
+          contentContainerStyle={styles.listContent}
+        />
+      ) : (
+        <Text style={[styles.noMealsText, { color: theme.text }]}>No meals match your search.</Text>
+      )}
     </View>
   );
 };
@@ -201,6 +197,7 @@ const styles = StyleSheet.create({
   noMealsText: {
     fontSize: 16,
     marginTop: 8,
+    textAlign: "center",
   },
 });
 

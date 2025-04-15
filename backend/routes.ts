@@ -535,6 +535,46 @@ router.put('/meals/:meal_id', authMiddleware, async (req: Request, res: Response
   }
 });
 
+// Get a specific meal by ID
+router.get('/meals/:meal_id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+  const { meal_id } = req.params; // Extract the meal ID from the URL
+  const db = (req as any).db; // Get the database instance
+
+  try {
+    const [rows]: [any[], any] = await db.query(
+      `
+      SELECT 
+        meals.id, 
+        meals.name, 
+        meals.description, 
+        meals.ingredients, 
+        meals.calories, 
+        meals.protein, 
+        meals.carbohydrates, 
+        meals.fat, 
+        meals.visibility, 
+        meals.created_at, 
+        users.username AS userName
+      FROM meals
+      INNER JOIN users ON meals.user_id = users.id
+      WHERE meals.id = ?
+      `,
+      [meal_id]
+    );
+
+    if (rows.length === 0) {
+      res.status(404).send('Meal not found');
+      return;
+    }
+
+    const meal = rows[0];
+    res.status(200).json(meal);
+  } catch (err) {
+    console.error('Error fetching meal:', err);
+    res.status(500).send('Error fetching meal');
+  }
+});
+
 // Delete a meal
 router.delete('/meals/:meal_id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   const { meal_id } = req.params; // Extract the meal ID from the URL
