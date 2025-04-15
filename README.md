@@ -13,6 +13,9 @@ Install the required dependencies for both the backend and frontend.
 ```bash
 # Install dependencies
 npm install
+ # For the time picker you nead this, Otherwise everything breaks
+ npx expo install @react-native-community/datetimepicker
+
 ```
 
 #### 2. Set Up the Database

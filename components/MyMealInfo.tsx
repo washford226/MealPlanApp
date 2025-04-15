@@ -15,6 +15,8 @@ import { useTheme } from "@/context/ThemeContext";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { format } from "date-fns";
 
 interface MyMealInfoProps {
   meal: Meal;
@@ -31,6 +33,7 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [mealType, setMealType] = useState("Breakfast");
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleAddToMealPlan = async () => {
     if (!selectedDate) {
@@ -67,6 +70,11 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
       console.error("Error adding meal to meal plan:", error);
       Alert.alert("Error", "Failed to add meal to the meal plan. Please try again later.");
     }
+  };
+
+  const handleDateSelection = (date: Date) => {
+    const formattedDate = format(date, "yyyy-MM-dd"); // Ensure consistent formatting
+    setSelectedDate(formattedDate);
   };
 
   const confirmDelete = () => {
@@ -279,13 +287,29 @@ const MyMealInfo: React.FC<MyMealInfoProps> = ({ meal, onBack }) => {
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>Add to Meal Plan</Text>
-            <TextInput
-              style={[styles.input, { borderColor: theme.border, color: theme.text }]}
-              placeholder="Select Date (YYYY-MM-DD)"
-              placeholderTextColor={theme.placeholder}
-              value={selectedDate}
-              onChangeText={setSelectedDate}
-            />
+            <View>
+              <TouchableOpacity
+                style={[styles.input, { borderColor: theme.border }]}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={{ color: theme.text }}>
+                  {selectedDate ? selectedDate : "Select Date"}
+                </Text>
+              </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={selectedDate ? new Date(selectedDate) : new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(event, date) => {
+                    setShowDatePicker(false);
+                    if (date) {
+                      handleDateSelection(date); 
+                    }
+                  }}
+                />
+              )}
+            </View>
             <View style={[styles.pickerContainer, { borderColor: theme.border }]}>
               <Picker
                 selectedValue={mealType}
