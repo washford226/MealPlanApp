@@ -480,7 +480,7 @@ router.post("/meals", authMiddleware, async (req: Request, res: Response): Promi
 // Get all meals
 router.get('/meals', authMiddleware, (req: Request, res: Response) => {
   const db = (req as any).db;
-  const { search } = req.query; // Get the search query parameter
+  const { search, filters } = req.query; // Get the search and filters parameters
 
   let query = `
     SELECT 
@@ -515,6 +515,23 @@ router.get('/meals', authMiddleware, (req: Request, res: Response) => {
     `;
     const searchTerm = `%${search}%`;
     values.push(searchTerm, searchTerm, searchTerm);
+  }
+
+  // Add filtering logic for nutritional values
+  if (filters) {
+    const parsedFilters = JSON.parse(filters as string); // Parse the filters from the query string
+    parsedFilters.forEach((filter: { type: string; greaterThan: string; lessThan: string }) => {
+      if (filter.type) {
+        if (filter.greaterThan) {
+          query += ` AND meals.${filter.type} > ?`;
+          values.push(Number(filter.greaterThan));
+        }
+        if (filter.lessThan) {
+          query += ` AND meals.${filter.type} < ?`;
+          values.push(Number(filter.lessThan));
+        }
+      }
+    });
   }
 
   query += `
@@ -597,11 +614,11 @@ router.post('/add-meal', authMiddleware, (req: Request, res: Response) => {
     });
 });
 
-// Get meals for the current user (without reviews)
+// Get meals for the current user (with filters and search)
 router.get('/my-meals', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   const user = (req as any).user; // Get the authenticated user
   const db = (req as any).db; // Get the database instance
-  const { search } = req.query; // Get the search query parameter
+  const { search, filters } = req.query; // Get the search and filters parameters
 
   if (!user) {
     res.status(401).send('User not authenticated');
@@ -636,6 +653,23 @@ router.get('/my-meals', authMiddleware, async (req: Request, res: Response): Pro
     `;
     const searchTerm = `%${search}%`;
     values.push(searchTerm, searchTerm);
+  }
+
+  // Add filtering logic for nutritional values
+  if (filters) {
+    const parsedFilters = JSON.parse(filters as string); // Parse the filters from the query string
+    parsedFilters.forEach((filter: { type: string; greaterThan: string; lessThan: string }) => {
+      if (filter.type) {
+        if (filter.greaterThan) {
+          query += ` AND meals.${filter.type} > ?`;
+          values.push(Number(filter.greaterThan));
+        }
+        if (filter.lessThan) {
+          query += ` AND meals.${filter.type} < ?`;
+          values.push(Number(filter.lessThan));
+        }
+      }
+    });
   }
 
   query += `
