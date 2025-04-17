@@ -15,6 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Meal } from "@/types/types";
 import { useTheme } from "@/context/ThemeContext";
+import { jwtDecode } from "jwt-decode"; // Use named import for jwtDecode
 
 interface MyMealsProps {
   onMealSelect: (meal: Meal) => void;
@@ -34,6 +35,12 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
   ]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [tempFilters, setTempFilters] = useState<{ type: string; greaterThan: string; lessThan: string }[]>([
+    { type: "calories", greaterThan: "", lessThan: "" },
+    { type: "fat", greaterThan: "", lessThan: "" },
+    { type: "protein", greaterThan: "", lessThan: "" },
+    { type: "carbohydrates", greaterThan: "", lessThan: "" },
+  ]);
 
   const { theme } = useTheme();
 
@@ -41,26 +48,34 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
     const fetchMyMeals = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
-        const savedFilters = await AsyncStorage.getItem("filters");
-        const savedSearchQuery = await AsyncStorage.getItem("searchQuery");
-
         if (!token) {
           Alert.alert("Error", "User not authenticated. Please log in.");
           return;
         }
-
-        if (savedFilters) {
-          setFilters(JSON.parse(savedFilters)); // Restore filters
+    
+        const userId = await getUserIdFromToken(); // Get the user's ID from the token
+        if (!userId) {
+          Alert.alert("Error", "User not authenticated. Please log in.");
+          return;
         }
-
+    
+        const savedFilters = await AsyncStorage.getItem(`filters_MyMeals_${userId}`); // Use MyMeals-specific key
+        const savedSearchQuery = await AsyncStorage.getItem(`searchQuery_MyMeals_${userId}`); // Use MyMeals-specific key
+    
+        if (savedFilters) {
+          const parsedFilters = JSON.parse(savedFilters);
+          setFilters(parsedFilters); // Restore filters
+          setTempFilters(parsedFilters); // Initialize tempFilters with saved filters
+        }
+    
         if (savedSearchQuery) {
           setSearchQuery(savedSearchQuery); // Restore search query
         }
-
+    
         const response = await axios.get(`${BASE_URL}/my-meals`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
+    
         setMeals(response.data);
         setFilteredMeals(response.data); // Initialize filteredMeals with all meals
       } catch (error) {
@@ -80,53 +95,92 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
       const passesFilters = filters.every((filter) => {
         const greaterThanValue = parseFloat(filter.greaterThan);
         const lessThanValue = parseFloat(filter.lessThan);
-
+  
         if (filter.type in meal) {
           const mealValue = parseFloat(meal[filter.type as keyof Meal] as unknown as string);
-
+  
           // Apply "greater than" filter if a value is provided
           if (!isNaN(greaterThanValue) && mealValue <= greaterThanValue) {
             return false;
           }
-
+  
           // Apply "less than" filter if a value is provided
           if (!isNaN(lessThanValue) && mealValue >= lessThanValue) {
             return false;
           }
         }
-
+  
         return true;
       });
-
+  
       // Apply search query
       const passesSearch =
         !searchQuery ||
         meal.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         meal.description.toLowerCase().includes(searchQuery.toLowerCase());
-
+  
       return passesFilters && passesSearch;
     });
-
+  
     setFilteredMeals(filtered);
-  }, [searchQuery, filters, meals]);
+  }, [searchQuery, filters, meals]); // Only apply filters when the filters state changes
 
   const handleSearchChange = async (text: string) => {
     setSearchQuery(text); // Update the search query state
     try {
-      await AsyncStorage.setItem("searchQuery", text); // Save the search query to AsyncStorage
+      const userId = await getUserIdFromToken(); // Get the user's ID from the token
+      if (!userId) {
+        Alert.alert("Error", "User not authenticated. Please log in.");
+        return;
+      }
+  
+      await AsyncStorage.setItem(`searchQuery_MyMeals_${userId}`, text); // Save search query with MyMeals-specific key
     } catch (error) {
       console.error("Error saving search query:", error);
     }
   };
 
-  const applyFilters = async () => {
-    try {
-      await AsyncStorage.setItem("filters", JSON.stringify(filters)); // Save filters to AsyncStorage
-      setIsFilterModalVisible(false); // Close the filter modal
-    } catch (error) {
-      console.error("Error saving filters:", error);
+const getUserIdFromToken = async (): Promise<number | null> => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) {
+      return null;
     }
-  };
+
+    const decodedToken = jwtDecode<{ id: number }>(token); // Use generic type for jwtDecode
+    return decodedToken.id;
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return null;
+  }
+};
+
+const applyFilters = async () => {
+  try {
+    const userId = await getUserIdFromToken(); // Get the user's ID from the token
+    if (!userId) {
+      Alert.alert("Error", "User not authenticated. Please log in.");
+      return;
+    }
+
+    const isValid = tempFilters.every(
+      (filter) =>
+        (!filter.greaterThan || !isNaN(parseFloat(filter.greaterThan))) &&
+        (!filter.lessThan || !isNaN(parseFloat(filter.lessThan)))
+    );
+
+    if (!isValid) {
+      Alert.alert("Invalid Filters", "Please enter valid numeric values for the filters.");
+      return;
+    }
+
+    setFilters(tempFilters); // Copy tempFilters into filters
+    await AsyncStorage.setItem(`filters_MyMeals_${userId}`, JSON.stringify(tempFilters)); // Save filters with MyMeals-specific key
+    setIsFilterModalVisible(false); // Close the filter modal
+  } catch (error) {
+    console.error("Error saving filters:", error);
+  }
+};
 
   if (loading) {
     return (
@@ -189,7 +243,7 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
         <View style={styles.modalContainer}>
           <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>Filter Meals</Text>
-            {filters.map((filter, index) => (
+            {tempFilters.map((filter, index) => (
               <View key={index} style={styles.filterRow}>
                 <Text style={[styles.filterLabel, { color: theme.text }]}>
                   {filter.type.charAt(0).toUpperCase() + filter.type.slice(1)}
@@ -200,9 +254,9 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
                   placeholderTextColor={theme.placeholder}
                   value={filter.greaterThan}
                   onChangeText={(text) => {
-                    const updatedFilters = [...filters];
+                    const updatedFilters = [...tempFilters];
                     updatedFilters[index].greaterThan = text;
-                    setFilters(updatedFilters);
+                    setTempFilters(updatedFilters);
                   }}
                   keyboardType="numeric"
                 />
@@ -212,9 +266,9 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
                   placeholderTextColor={theme.placeholder}
                   value={filter.lessThan}
                   onChangeText={(text) => {
-                    const updatedFilters = [...filters];
+                    const updatedFilters = [...tempFilters];
                     updatedFilters[index].lessThan = text;
-                    setFilters(updatedFilters);
+                    setTempFilters(updatedFilters);
                   }}
                   keyboardType="numeric"
                 />
@@ -225,7 +279,10 @@ const MyMeals: React.FC<MyMealsProps> = ({ onMealSelect }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.cancelButton, { backgroundColor: theme.danger }]}
-              onPress={() => setIsFilterModalVisible(false)}
+              onPress={() => {
+                setTempFilters(filters); // Reset tempFilters to the current filters
+                setIsFilterModalVisible(false); // Close the modal
+              }}
             >
               <Text style={[styles.cancelButtonText, { color: theme.buttonText }]}>Cancel</Text>
             </TouchableOpacity>
@@ -354,7 +411,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   addMealButton: {
-    bottom: 40, // Place it above the navigation bar
+    position: "absolute",
+    bottom: 50, // Place it above the navigation bar
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
